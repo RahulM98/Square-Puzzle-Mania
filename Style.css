@@ -1,0 +1,10 @@
+QWidget {
+    background-image: url(flower.jpg);
+    background-repeat: no-repeat;
+    background-position: center;    
+}
+QFrame {
+    background-image:url(flower.jpg);
+    background-repeat:no-repeat;
+    background-position: center;
+    }

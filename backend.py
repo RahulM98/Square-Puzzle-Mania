@@ -1,3 +1,4 @@
+from PIL import Image
 import sys
 from PyQt5 import QtWidgets,QtCore,QtGui
 from PyQt5.QtWidgets import QApplication
@@ -70,14 +71,15 @@ class Node():
 class Game():
     def __init__(self):
         self.levels = {'beginner':3,'easy':4, 'medium':5, 'hard':5}
-        self.curr_level = 'easy'
+        self.curr_level = 'beginner'
         self.move_count = 0
         self.time_count = 0
         self.hint_count = 0
+        self.img_no = 1
         #self.path = []
         #self.idx_path = -1
         
-        self.init_gameWindow(self.curr_level)
+        self.init_gameWindow()
         self.init_board()
 
         self.timer = QtCore.QTimer()
@@ -92,7 +94,11 @@ class Game():
         self.pause_win.resume_btn.clicked.connect(self.resume_btn_func)
         self.pause_win.menu_btn.clicked.connect(self.return_to_menu)
         
-    def init_gameWindow(self,level):
+    def init_gameWindow(self):
+        self.move_count = 0
+        self.time_count = 0
+        self.hint_count = 0
+        
         self.game_win = gameWindow(self.levels[self.curr_level])
         self.game_win.pause_btn.clicked.connect(self.pause_btn_func)
         self.game_win.hint_btn.clicked.connect(self.hint_btn_func)
@@ -101,16 +107,18 @@ class Game():
         for i in range(self.levels[self.curr_level]):
             for j in range(self.levels[self.curr_level]):
                 self.game_win.tiles[i][j].clicked.connect(lambda _,x=i,y=j: self.btn_pressed(x,y))
-        if level == 'hard':
+        #Fill Message area
+        if self.curr_level == 'hard':
             self.game_win.shuffle_btn.setEnabled(True)
             self.game_win.hint_btn.setEnabled(False)
-            self.game_win.msg_lbl.setText('Hint button is disabled in\nlevel : '+level.upper())
+            self.game_win.msg_lbl.setText('HINT button is disabled in '+self.curr_level.upper()+' level')
         else:
             self.game_win.shuffle_btn.setEnabled(False)
             self.game_win.hint_btn.setEnabled(True)
-            self.game_win.msg_lbl.setText('Shuffle button is disabled in\nlevel : '+level.upper())
+            self.game_win.msg_lbl.setText('SHUFFLE button is disabled in '+self.curr_level.upper()+' level')
         self.game_win.msg_lbl.setWordWrap(True)
         self.game_win.move_count_lbl.setText(str(self.move_count))
+        print("Backend : ",self.game_win.tiles[0][0].size())
 
     def init_gameOverWindow(self):
         self.timer.stop()
@@ -199,8 +207,11 @@ class Game():
         self.game_win.move_count_lbl.setText(str(self.move_count))
 
     def shuffle_tiles(self,x1,y1,x2,y2):
-        self.game_win.tiles[x2][y2].setText(self.game_win.tiles[x1][y1].text())
-        self.game_win.tiles[x1][y1].setText("")
+        self.game_win.tiles[x2][y2].setIcon(self.game_win.tiles[x1][y1].icon())
+        self.game_win.tiles[x1][y1].setIcon(QtGui.QIcon())
+        print(self.game_win.tiles[1][1].geometry())
+        #self.game_win.tiles[x2][y2].setText(self.game_win.tiles[x1][y1].text())
+        #self.game_win.tiles[x1][y1].setText("")
 
     def auto_solve_puzzle(self):
         n = self.levels[self.curr_level]
@@ -279,7 +290,12 @@ class Game():
             temp = []
             for j in range(size):
                 temp.append(c)
-                self.game_win.tiles[i][j].setText(str(c)) # Filling the tiles
+                #self.game_win.tiles[i][j].setText(str(c)) # Filling the tiles
+                #img = Image.open('{}/{}/{}.jpg'.format(self.curr_level,self.img_no,c))
+                #img = img.resize((self.game_win.tiles[i][j].width(),self.game_win.tiles[i][j].height()))
+                self.game_win.tiles[i][j].setIcon(QtGui.QIcon('{}/{}/{}.jpg'.format(self.curr_level,self.img_no,c)))
+                self.game_win.tiles[i][j].setIconSize(QtCore.QSize(self.game_win.tiles[i][j].width(),self.game_win.tiles[i][j].height()))
+                #self.game_win.tiles[i][j].setStyleSheet('image:url({}/{}/{}.jpg) 5;border-width:5px'.format(self.curr_level,self.img_no,c))
                 c+=1
             self.board.append(temp[:])
             #self.res_board.append(temp[:])
@@ -291,7 +307,10 @@ class Game():
         #blank tile in board
         self.board[self.blank_i][self.blank_j] = 0
         #blank tile in UI
-        self.game_win.tiles[self.blank_i][self.blank_j].setText('')
+        #self.game_win.tiles[self.blank_i][self.blank_j].setText('')
+        self.game_win.tiles[i][j].setIcon(QtGui.QIcon())
+        #self.game_win.tiles[i][j].adjustSize()
+        #print("Icon size : ",self.game_win.tiles[i][j].iconSize())
 
     def calculate_score(self):
         return 0

@@ -7,6 +7,7 @@ class splashWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setFixedSize(500,350)
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.initUI()
     
@@ -18,7 +19,7 @@ class splashWindow(QWidget):
         self.show()
 
 class menuWindow(QWidget):
-    def __init__(self,no_of_tiles):
+    def __init__(self):
         super().__init__()
         height = QApplication.desktop().screenGeometry().height()
         width = QApplication.desktop().screenGeometry().width()
@@ -44,26 +45,26 @@ class gameWindow(QWidget):
     right_style = """
     QPushButton{
         border: 0px solid black;
-        font: 50px bold;
+        font: 40px bold;
         font-family: MV Boli;
         color: white;
     }
     QLabel#obj_1{
         border : 3px solid white;
         border-radius : 5px;
-        font: 30px bold;
+        font: 24px bold;
         font-family: MV Boli;
         color: white;
     }
     QLabel#obj_2{
-        font: 36px bold;
+        font: 26px bold;
         font-family: MV Boli;
         color: white;
     }
     QLabel#obj_3{
         border : 3px solid white;
         border-radius : 10px;
-        font: 36px bold;
+        font: 26px bold;
         font-family: MV Boli;
         color: white;
     }
@@ -76,7 +77,7 @@ class gameWindow(QWidget):
             for j in range(no_of_tiles):
                 #if i==j and i==no_of_tiles-1:
                 #    break
-                temp.append(QPushButton('{}X{}'.format(i,j)))
+                temp.append(QPushButton(''))#temp.append(QPushButton('{}X{}'.format(i,j)))
             self.tiles.append(temp)
 
         print(self.tiles[0][0].width(),self.tiles[0][0].height())
@@ -167,9 +168,11 @@ class gameWindow(QWidget):
                 #if i==j and i==no_of_tiles-1:
                 #    break
                 self.tiles[i][j].setSizePolicy(QtWidgets.QSizePolicy.Preferred,QtWidgets.QSizePolicy.Preferred)
-                #self.tiles[i][j].setFlat(True)
-                self.tiles[i][j].setStyleSheet('font:60px')
+                self.tiles[i][j].setFlat(True)
+                self.tiles[i][j].setStyleSheet('border:0px solid black')
                 self.grid.addWidget(self.tiles[i][j],i,j,1,1)
+
+        self.grid.setSpacing(0)
         
         #self.back_btn.clicked.connect(self.func)
 
@@ -180,13 +183,14 @@ class gameWindow(QWidget):
 
         self.hbox = QHBoxLayout()
         self.hbox.addStretch(1)
-        self.hbox.addLayout(self.grid,9)
+        self.hbox.addLayout(self.grid,8)
         self.hbox.addStretch(1)
         self.hbox.addWidget(self.r_frame,5)
         self.setLayout(self.hbox)
 
-        self.img_lbl.setMaximumSize(450,450)
-        self.img_lbl.setPixmap(QtGui.QPixmap('images/flower.jpg').scaled(self.img_lbl.width(),self.img_lbl.height(),QtCore.Qt.KeepAspectRatio))
+        #self.img_lbl.setMaximumSize(450,450)
+        self.img_lbl.setPixmap(QtGui.QPixmap('images/flower.jpg').scaled(450,450,QtCore.Qt.KeepAspectRatio))
+        self.img_lbl.setAlignment(QtCore.Qt.AlignHCenter)
 
         image = QtGui.QPixmap('images/bg01.jpg')
         palette = QtGui.QPalette()

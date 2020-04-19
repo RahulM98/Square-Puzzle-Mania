@@ -8,7 +8,7 @@ class HelloWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Timer")
-        self.resize(400,300)
+        self.resize(900,900)
 
         self.label = QLabel("Time",self)
         self.label.move(100,100)
@@ -36,3 +36,13 @@ if __name__ == "__main__":
     mainWin = HelloWindow()
     mainWin.show()
     sys.exit( app.exec_() )
+
+
+"""import os
+import shutil
+try:
+    path = 'images/new'
+    #os.mkdir(path)
+    shutil.rmtree(path)
+except OSError as e:
+    print(e)"""

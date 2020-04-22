@@ -172,7 +172,8 @@ class gameWindow(QWidget):
                 self.tiles[i][j].setStyleSheet('border:0px solid black')
                 self.grid.addWidget(self.tiles[i][j],i,j,1,1)
 
-        self.grid.setSpacing(0)
+        self.grid.setHorizontalSpacing(10)
+        self.grid.setVerticalSpacing(10)
         
         #self.back_btn.clicked.connect(self.func)
 
@@ -189,7 +190,7 @@ class gameWindow(QWidget):
         self.setLayout(self.hbox)
 
         #self.img_lbl.setMaximumSize(450,450)
-        self.img_lbl.setPixmap(QtGui.QPixmap('images/flower.jpg').scaled(450,450,QtCore.Qt.KeepAspectRatio))
+        #self.img_lbl.setPixmap(QtGui.QPixmap('images/flower.jpg').scaled(450,450,QtCore.Qt.KeepAspectRatio))
         self.img_lbl.setAlignment(QtCore.Qt.AlignHCenter)
 
         image = QtGui.QPixmap('images/bg01.jpg')

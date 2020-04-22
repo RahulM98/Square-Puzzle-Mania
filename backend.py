@@ -1,8 +1,10 @@
-from PIL import Image
+#from PIL import Image
 import sys
 from PyQt5 import QtWidgets,QtCore,QtGui
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QRect,QPropertyAnimation,QEasingCurve
 from UI import gameWindow,pauseWindow,gameOverWindow
+import random
 
 class Node():
     def __init__(self,data,n,g_score):  #Zero pos is a list having co ordinates of zero
@@ -72,7 +74,7 @@ class Game():
     def __init__(self):
         self.levels = {'beginner':3,'easy':4, 'medium':5, 'hard':5}
         self.curr_level = 'beginner'
-        self.move_count = 0
+        self.move_count = 15
         self.time_count = 0
         self.hint_count = 0
         self.img_no = 1
@@ -80,7 +82,7 @@ class Game():
         #self.idx_path = -1
         
         self.init_gameWindow()
-        self.init_board()
+        #self.init_board()
 
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.timer_handler)
@@ -95,10 +97,11 @@ class Game():
         self.pause_win.menu_btn.clicked.connect(self.return_to_menu)
         
     def init_gameWindow(self):
-        self.move_count = 0
+        self.move_count = 15
         self.time_count = 0
         self.hint_count = 0
         
+        self.init_board()
         self.game_win = gameWindow(self.levels[self.curr_level])
         self.game_win.pause_btn.clicked.connect(self.pause_btn_func)
         self.game_win.hint_btn.clicked.connect(self.hint_btn_func)
@@ -107,6 +110,8 @@ class Game():
         for i in range(self.levels[self.curr_level]):
             for j in range(self.levels[self.curr_level]):
                 self.game_win.tiles[i][j].clicked.connect(lambda _,x=i,y=j: self.btn_pressed(x,y))
+        height = QApplication.desktop().screenGeometry().height() // 2.4
+        self.game_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.img_no)).scaled(height,height,QtCore.Qt.KeepAspectRatio))
         #Fill Message area
         if self.curr_level == 'hard':
             self.game_win.shuffle_btn.setEnabled(True)
@@ -119,6 +124,8 @@ class Game():
         self.game_win.msg_lbl.setWordWrap(True)
         self.game_win.move_count_lbl.setText(str(self.move_count))
         print("Backend : ",self.game_win.tiles[0][0].size())
+
+        self.rearrange_all_tiles(10)
 
     def init_gameOverWindow(self):
         self.timer.stop()
@@ -173,22 +180,22 @@ class Game():
             shuffle_nos(self.blank_i,self.blank_j,i,j,self.board,n)
             self.shuffle_tiles(i,j,self.blank_i,self.blank_j)
             #self.blank_j = self.blank_j-1
-            self.move_count += 1
+            self.move_count -= 1
         elif i == self.blank_i and j == self.blank_j+1: #0 moves right
             shuffle_nos(self.blank_i,self.blank_j,i,j,self.board,n)
             self.shuffle_tiles(i,j,self.blank_i,self.blank_j)
             #self.blank_j = self.blank_j+1
-            self.move_count += 1
+            self.move_count -= 1
         elif i == self.blank_i-1 and j == self.blank_j: #0 moves up
             shuffle_nos(self.blank_i,self.blank_j,i,j,self.board,n)
             self.shuffle_tiles(i,j,self.blank_i,self.blank_j)
             #self.blank_i = self.blank_i-1
-            self.move_count += 1
+            self.move_count -= 1
         elif i == self.blank_i+1 and j == self.blank_j: #0 moves down
             shuffle_nos(self.blank_i,self.blank_j,i,j,self.board,n)
             self.shuffle_tiles(i,j,self.blank_i,self.blank_j)
             #self.blank_i = self.blank_i+1
-            self.move_count += 1
+            self.move_count -= 1
         else:      #invalid move
             pass
         
@@ -205,13 +212,72 @@ class Game():
         print()"""
 
         self.game_win.move_count_lbl.setText(str(self.move_count))
+        if self.move_count == 0:
+            print("Out of moves")
 
     def shuffle_tiles(self,x1,y1,x2,y2):
-        self.game_win.tiles[x2][y2].setIcon(self.game_win.tiles[x1][y1].icon())
-        self.game_win.tiles[x1][y1].setIcon(QtGui.QIcon())
+        
         print(self.game_win.tiles[1][1].geometry())
+        def animation():
+            temp = self.game_win.tiles[x1][y1].icon()
+            self.game_win.tiles[x1][y1].setIcon(QtGui.QIcon())
+            self.game_win.tiles[x2][y2].setIcon(temp)
+            #a
+            self.anim2 = QPropertyAnimation(self.game_win.tiles[x2][y2], b"geometry")
+            self.anim2.setDuration(350)
+            self.anim2.setStartValue(b)
+            self.anim2.setEndValue(a)
+            self.anim2.start()
+            
+            
+        # animation part 1
+        self.anim1 = QPropertyAnimation(self.game_win.tiles[x2][y2], b"geometry")
+        self.anim1.setDuration(1)
+        #store geometry of both buttons
+        a = self.game_win.tiles[x2][y2].geometry()
+        b = self.game_win.tiles[x1][y1].geometry()
+        self.anim1.setStartValue(a)
+        self.anim1.setEndValue(b)
+        self.anim1.start()
+        self.anim1.finished.connect(animation)
+
         #self.game_win.tiles[x2][y2].setText(self.game_win.tiles[x1][y1].text())
         #self.game_win.tiles[x1][y1].setText("")
+
+    def rearrange_all_tiles(self,no_of_repeat):
+        n = self.levels[self.curr_level]
+        available_moves = [[self.blank_i,self.blank_j-1],[self.blank_i-1,self.blank_j],[self.blank_i,self.blank_j+1],[self.blank_i+1,self.blank_j]]
+        number = 1
+        #do
+        prev_choice = choice = random.randint(0,3)
+        #only one legal shuffle is allowed here
+        while shuffle_nos(self.blank_i,self.blank_j,available_moves[choice][0],available_moves[choice][1],self.board,n) == False:
+            prev_choice = choice = random.randint(0,3)
+        self.blank_i,self.blank_j = available_moves[choice]
+        number += 1
+        
+        available_moves = [[self.blank_i,self.blank_j-1],[self.blank_i-1,self.blank_j],[self.blank_i,self.blank_j+1],[self.blank_i+1,self.blank_j]]
+        #rest of the legal shuffles are done here
+        while number <= no_of_repeat:
+            choice = random.randint(0,3)
+            #print('from : ',(self.blank_i,self.blank_j),' to : ',available_moves[choice])
+            
+            if abs(prev_choice-choice)!=2 and shuffle_nos(self.blank_i,self.blank_j,available_moves[choice][0],available_moves[choice][1],self.board,n) == True:
+                self.blank_i,self.blank_j = available_moves[choice]
+                available_moves = [[self.blank_i,self.blank_j-1],[self.blank_i-1,self.blank_j],[self.blank_i,self.blank_j+1],[self.blank_i+1,self.blank_j]]
+                
+                prev_choice = choice
+                number += 1
+        
+        #place images on appropriate tiles
+        for i in range(n):
+            for j in range(n):
+                c = self.board[i][j]
+                if c != 0:
+                    self.game_win.tiles[i][j].setIcon(QtGui.QIcon('{}/{}/{}.jpg'.format(self.curr_level,self.img_no,c)))
+                else:
+                    self.game_win.tiles[i][j].setIcon(QtGui.QIcon())
+                self.game_win.tiles[i][j].setIconSize(QtCore.QSize(self.game_win.tiles[i][j].size()))
 
     def auto_solve_puzzle(self):
         n = self.levels[self.curr_level]
@@ -234,8 +300,14 @@ class Game():
         open_list.append(node)
         while len(open_list) > 0:
             #print("AA")
-            if len(open_list) > 1000:
+            if len(open_list) > 1000:   # Can not solve the puzzle
                 print("Halt")
+                available_moves = [[self.blank_i,self.blank_j-1],[self.blank_i-1,self.blank_j],[self.blank_i,self.blank_j+1],[self.blank_i+1,self.blank_j]]
+                choice = random.randint(0,3)
+                while shuffle_nos(self.blank_i,self.blank_j,available_moves[choice][0],available_moves[choice][1],self.board,n) == False:
+                    choice = random.randint(0,3)
+                self.shuffle_tiles(available_moves[choice][0],available_moves[choice][1],self.blank_i,self.blank_j)
+                self.blank_i,self.blank_j = available_moves[choice]
                 break
             curr_node = open_list.pop(0)
 
@@ -293,8 +365,8 @@ class Game():
                 #self.game_win.tiles[i][j].setText(str(c)) # Filling the tiles
                 #img = Image.open('{}/{}/{}.jpg'.format(self.curr_level,self.img_no,c))
                 #img = img.resize((self.game_win.tiles[i][j].width(),self.game_win.tiles[i][j].height()))
-                self.game_win.tiles[i][j].setIcon(QtGui.QIcon('{}/{}/{}.jpg'.format(self.curr_level,self.img_no,c)))
-                self.game_win.tiles[i][j].setIconSize(QtCore.QSize(self.game_win.tiles[i][j].width(),self.game_win.tiles[i][j].height()))
+                #self.game_win.tiles[i][j].setIcon(QtGui.QIcon('{}/{}/{}.jpg'.format(self.curr_level,self.img_no,c)))
+                #self.game_win.tiles[i][j].setIconSize(QtCore.QSize(self.game_win.tiles[i][j].width(),self.game_win.tiles[i][j].height()))
                 #self.game_win.tiles[i][j].setStyleSheet('image:url({}/{}/{}.jpg) 5;border-width:5px'.format(self.curr_level,self.img_no,c))
                 c+=1
             self.board.append(temp[:])
@@ -308,7 +380,7 @@ class Game():
         self.board[self.blank_i][self.blank_j] = 0
         #blank tile in UI
         #self.game_win.tiles[self.blank_i][self.blank_j].setText('')
-        self.game_win.tiles[i][j].setIcon(QtGui.QIcon())
+        #self.game_win.tiles[i][j].setIcon(QtGui.QIcon())
         #self.game_win.tiles[i][j].adjustSize()
         #print("Icon size : ",self.game_win.tiles[i][j].iconSize())
 

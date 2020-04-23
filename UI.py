@@ -1,6 +1,6 @@
 import sys
 from PyQt5 import QtWidgets,QtGui,QtCore
-from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QLabel,QGridLayout,QHBoxLayout,QVBoxLayout,QFrame,QCheckBox
+from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QLabel,QGridLayout,QHBoxLayout,QVBoxLayout,QFrame,QCheckBox,QGraphicsDropShadowEffect
 import math
 
 class splashWindow(QWidget):
@@ -21,22 +21,102 @@ class splashWindow(QWidget):
 class menuWindow(QWidget):
     def __init__(self):
         super().__init__()
-        height = QApplication.desktop().screenGeometry().height()
-        width = QApplication.desktop().screenGeometry().width()
-        self.setFixedSize(width,height)
+        self.height = QApplication.desktop().screenGeometry().height()
+        self.width = QApplication.desktop().screenGeometry().width()
+        self.setFixedSize(self.width,self.height)
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.initUI()
 
+    style = """
+    QPushButton{
+        border: 5px solid white;
+        padding: 8px;
+        border-radius: 10px;
+        color: white;
+    }
+    QLabel{
+        padding-left: 10px;
+        padding-right: 10px;
+        color: white;
+    }
+    """
+
     def initUI(self):
-        pass
+        lbl = QLabel("Square Puzzle Mania")
+        self.new_game_btn = QPushButton("New Game")
+        self.score_btn = QPushButton("View Score")
+        self.settings_btn = QPushButton("Settings")
+        self.help_btn = QPushButton("Help")
+        self.quit_btn = QPushButton("Quit Game")
+
+        vbox = QVBoxLayout()
+        vbox.addStretch(2)
+        vbox.addWidget(self.new_game_btn,1)
+        vbox.addStretch(1)
+        vbox.addWidget(self.score_btn,1)
+        vbox.addStretch(1)
+        vbox.addWidget(self.settings_btn,1)
+        vbox.addStretch(1)
+        vbox.addWidget(self.help_btn,1)
+        vbox.addStretch(1)
+        vbox.addWidget(self.quit_btn,1)
+        vbox.addStretch(2)
+
+        """grid = QGridLayout()
+        grid.addWidget(lbl,0,0,1,5)
+        grid.addWidget(self.new_game_btn,2,2,1,1)
+        grid.addWidget(self.score_btn,4,2,1,1)
+        grid.addWidget(self.settings_btn,6,2,1,1)
+        grid.addWidget(self.help_btn,8,2,1,1)
+        grid.addWidget(self.quit_btn,10,2,1,1)
+
+        grid.setRowStretch(0,2)
+        for i in range(1,12):
+            grid.setRowStretch(i,1)
+        for i in range(5):
+            grid.setColumnStretch(i,1)"""
+
+        hbox = QHBoxLayout()
+        hbox.addWidget(lbl,5)
+        hbox.addStretch(1)
+        hbox.addLayout(vbox,2)
+        hbox.addStretch(2)
+
+        self.setLayout(hbox)
+
+        self.quit_btn.clicked.connect(sys.exit)
+
+        effect = QGraphicsDropShadowEffect()
+        effect.setColor(QtGui.QColor(QtCore.Qt.lightGray))
+        effect.setBlurRadius(15)
+        lbl.setGraphicsEffect(effect)
+        lbl.setWordWrap(True)
+        lbl.setAlignment(QtCore.Qt.AlignCenter)
+
+        lbl.setFont(QtGui.QFont("Segoe Print",72,QtGui.QFont.Bold))
+        self.new_game_btn.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
+        self.score_btn.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
+        self.settings_btn.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
+        self.help_btn.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
+        self.quit_btn.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
+
+        self.setStyleSheet(self.style)
+
+        image = QtGui.QPixmap('images/menu_bg.jpg')
+        image = image.scaled(self.width,self.height)
+        palette = QtGui.QPalette()
+        palette.setBrush(self.backgroundRole(),QtGui.QBrush(image))
+        self.setPalette(palette)
+
+        self.show()
 
 class gameWindow(QWidget):
     def __init__(self,no_of_tiles):
         super().__init__()
-        height = QApplication.desktop().screenGeometry().height()
-        width = QApplication.desktop().screenGeometry().width()
+        self.height = QApplication.desktop().screenGeometry().height()
+        self.width = QApplication.desktop().screenGeometry().width()
         #print("height",height,"width",width)
-        self.setFixedSize(width,height)
+        self.setFixedSize(self.width,self.height)
         #self.setWindowTitle("Puzzle game")
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         #self.showFullScreen()
@@ -194,6 +274,7 @@ class gameWindow(QWidget):
         self.img_lbl.setAlignment(QtCore.Qt.AlignHCenter)
 
         image = QtGui.QPixmap('images/bg01.jpg')
+        #image = image.scaled(self.width,self.height)
         palette = QtGui.QPalette()
         palette.setBrush(self.backgroundRole(),QtGui.QBrush(image))
         self.setPalette(palette)
@@ -331,6 +412,6 @@ class gameOverWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    win = gameWindow(4)
+    win = menuWindow()   #gameWindow(4)
     #win.show()
     sys.exit(app.exec_())

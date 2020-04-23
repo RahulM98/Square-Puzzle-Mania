@@ -2,8 +2,9 @@
 import sys
 from PyQt5 import QtWidgets,QtCore,QtGui
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QRect,QPropertyAnimation,QEasingCurve
-from UI import gameWindow,pauseWindow,gameOverWindow
+from PyQt5.QtCore import QRect,QPropertyAnimation
+from PyQt5.QtMultimedia import QSoundEffect
+from UI import menuWindow,gameWindow,pauseWindow,gameOverWindow
 import random
 
 class Node():
@@ -80,13 +81,40 @@ class Game():
         self.img_no = 1
         #self.path = []
         #self.idx_path = -1
+
+        self.bg_snd = QSoundEffect()
+        self.bg_snd.setSource(QtCore.QUrl.fromLocalFile('audio/join.wav'))
+        self.bg_snd.setLoopCount(QSoundEffect.Infinite)
         
-        self.init_gameWindow()
+        self.menu_snd = QSoundEffect()
+        self.menu_snd.setSource(QtCore.QUrl.fromLocalFile('audio/guitar.wav'))
+        self.menu_snd.setLoopCount(QSoundEffect.Infinite)
+
+        #clk_snd1 = QSoundEffect()
+        #clk_snd1.setSource(QtCore.QUrl.fromLocalFile('audio/click1.wav'))
+        #self.clk_snd1.setLoopCount(QSoundEffect.Infinite)
+        #clk_snd2 = QSoundEffect()
+        #clk_snd2.setSource(QtCore.QUrl.fromLocalFile('audio/click2.wav'))
+        #self.click_sounds = [clk_snd1,clk_snd2]
+        #self.volume = 1
+
+        self.init_menuWindow()
+        #self.init_gameWindow()
         #self.init_board()
 
         self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.timer_handler)
-        self.timer.start(1000)
+        #self.timer.timeout.connect(self.timer_handler)
+        #self.timer.start(1000)
+
+    def init_menuWindow(self):
+        self.menu_win = menuWindow()
+        self.menu_win.new_game_btn.clicked.connect(self.new_game_btn_func)
+        self.menu_win.score_btn.clicked.connect(self.blank_func)
+        self.menu_win.settings_btn.clicked.connect(self.blank_func)
+        self.menu_win.help_btn.clicked.connect(self.blank_func)
+        self.menu_win.quit_btn.clicked.connect(self.blank_func)
+
+        self.menu_snd.play()
 
     def init_pauseWindow(self):
         self.pause_win = pauseWindow()
@@ -126,6 +154,14 @@ class Game():
         print("Backend : ",self.game_win.tiles[0][0].size())
 
         self.rearrange_all_tiles(10)
+
+        #time counter
+        self.timer.timeout.connect(self.timer_handler)
+        self.timer.start(1000)
+
+        #sound
+        self.bg_snd.setVolume(1.0)
+        self.bg_snd.play()
 
     def init_gameOverWindow(self):
         self.timer.stop()
@@ -171,8 +207,18 @@ class Game():
 
     def return_to_menu(self):
         print("Exit from window")
-        sys.exit()
+        self.bg_snd.stop()
+        self.menu_snd.play()
+        self.game_win.close()
 
+    def blank_func(self):
+        pass
+
+    def new_game_btn_func(self):
+        self.init_gameWindow()
+        self.menu_snd.stop()
+        #self.menu_win.close()
+    
     def btn_pressed(self,i,j):
         n = self.levels[self.curr_level]
 
@@ -224,7 +270,7 @@ class Game():
             self.game_win.tiles[x2][y2].setIcon(temp)
             #a
             self.anim2 = QPropertyAnimation(self.game_win.tiles[x2][y2], b"geometry")
-            self.anim2.setDuration(350)
+            self.anim2.setDuration(250)
             self.anim2.setStartValue(b)
             self.anim2.setEndValue(a)
             self.anim2.start()
@@ -350,6 +396,7 @@ class Game():
         self.shuffle_tiles(x,y,self.blank_i,self.blank_j)
         self.blank_i,self.blank_j = x,y
         if goal.parent_node == curr_node:
+            
             self.init_gameOverWindow()
 
     #Initializing both game board and result board

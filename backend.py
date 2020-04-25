@@ -6,6 +6,7 @@ from PyQt5.QtCore import QRect,QPropertyAnimation
 from PyQt5.QtMultimedia import QSoundEffect
 from UI import menuWindow,gameWindow,pauseWindow,gameOverWindow
 from UI_Settings import settingsWindow
+from Help import helpWindow
 import random
 
 class Node():
@@ -120,12 +121,15 @@ class Game():
 
         def settings_btn_func():
             self.init_settingsWindow()
+
+        def help_btn_func():
+            self.init_helpWindow()
             
         self.menu_win = menuWindow()
         self.menu_win.new_game_btn.clicked.connect(new_game_btn_func)
         self.menu_win.score_btn.clicked.connect(self.blank_func)
         self.menu_win.settings_btn.clicked.connect(settings_btn_func)
-        self.menu_win.help_btn.clicked.connect(self.blank_func)
+        self.menu_win.help_btn.clicked.connect(help_btn_func)
         self.menu_win.quit_btn.clicked.connect(sys.exit)
 
         if self.sound_on == True:
@@ -133,6 +137,19 @@ class Game():
         else:
             self.menu_snd.setVolume(0)
         self.menu_snd.play()
+
+    def init_helpWindow(self):
+        def back_btn_func():
+            self.help_win.close()
+
+        self.help_win = helpWindow()
+        self.help_win.back_btn.clicked.connect(back_btn_func)
+        
+        if self.sound_on == True:
+            self.menu_snd.setVolume(self.curr_volume)
+        else:
+            self.menu_snd.setVolume(0)
+
 
     def init_pauseWindow(self):
         self.pause_win = pauseWindow()
@@ -549,28 +566,32 @@ class Game():
                 self.settings_win.medium_level_btn.setChecked(False)
                 self.settings_win.hard_level_btn.setChecked(False)
                 self.curr_level = 'beginner'
-                #self.settings_win.level_msg_lbl.setText('')
+                self.settings_win.level_msg_lbl.setText("""You get 8 tiles to solve where number of movements is limited. Hint 
+                                                        functionality is available for this level.""")
             elif source.text() == 'Easy':
                 self.settings_win.beginner_level_btn.setChecked(False)
                 self.settings_win.easy_level_btn.setChecked(True)
                 self.settings_win.medium_level_btn.setChecked(False)
                 self.settings_win.hard_level_btn.setChecked(False)
                 self.curr_level = 'easy'
-                #self.settings_win.level_msg_lbl.setText('')
+                self.settings_win.level_msg_lbl.setText("""You have 15 tiles to arrange with a limited number of movements. Hint 
+                                                        functionality is available for this level.""")
             elif source.text() == 'Medium':
                 self.settings_win.beginner_level_btn.setChecked(False)
                 self.settings_win.easy_level_btn.setChecked(False)
                 self.settings_win.medium_level_btn.setChecked(True)
                 self.settings_win.hard_level_btn.setChecked(False)
                 self.curr_level = 'medium'
-                #self.settings_win.level_msg_lbl.setText('')
+                self.settings_win.level_msg_lbl.setText("""You get 24 tiles to arrange properly in a limited number of movements. Hint 
+                                                        functionality is available for this level.""")
             elif source.text() == 'Hard':
                 self.settings_win.beginner_level_btn.setChecked(False)
                 self.settings_win.easy_level_btn.setChecked(False)
                 self.settings_win.medium_level_btn.setChecked(False)
                 self.settings_win.hard_level_btn.setChecked(True)
                 self.curr_level = 'hard'
-                #self.settings_win.level_msg_lbl.setText('')
+                self.settings_win.level_msg_lbl.setText("""You have 24 tiles where the number of movements are not limited. Shuffle feature 
+                                                        is available for this level""")
 
         #Right side Part3
         def checkBox_state_change(state):
@@ -620,12 +641,20 @@ class Game():
 
         if self.curr_level == 'beginner':
             self.settings_win.beginner_level_btn.setChecked(True)
+            self.settings_win.level_msg_lbl.setText("""You get 8 tiles to solve where number of movements is limited. Hint 
+                                                        functionality is available for this level.""")
         elif self.curr_level == 'easy':
             self.settings_win.easy_level_btn.setChecked(True)
+            self.settings_win.level_msg_lbl.setText("""You have 15 tiles to arrange with a limited number of movements. Hint 
+                                                        functionality is available for this level.""")
         elif self.curr_level == 'medium':
             self.settings_win.medium_level_btn.setChecked(True)
+            self.settings_win.level_msg_lbl.setText("""You get 24 tiles to arrange properly in a limited number of movements. Hint 
+                                                        functionality is available for this level.""")
         elif self.curr_level == 'hard':
             self.settings_win.hard_level_btn.setChecked(True)
+            self.settings_win.level_msg_lbl.setText("""You have 24 tiles where the number of movements are not limited. Shuffle feature 
+                                                        is available for this level""")
 
         #Part3
         self.settings_win.sound_on_check.stateChanged.connect(checkBox_state_change)

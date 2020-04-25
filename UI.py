@@ -34,6 +34,12 @@ class menuWindow(QWidget):
         border-radius: 10px;
         color: white;
     }
+    QPushButton:hover{
+        border: 5px solid rgb(176,196,222);
+        padding: 8px;
+        border-radius: 10px;
+        color: rgb(176,196,222);
+    }
     QLabel{
         padding-left: 10px;
         padding-right: 10px;
@@ -128,6 +134,12 @@ class gameWindow(QWidget):
         font: 40px bold;
         font-family: MV Boli;
         color: white;
+    }
+    QPushButton:hover{
+        border: 0px solid rgb(176,196,222);
+        font: 40px bold;
+        font-family: MV Boli;
+        color: rgb(176,196,222);
     }
     QLabel#obj_1{
         border : 3px solid white;

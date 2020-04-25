@@ -21,6 +21,11 @@ class settingsWindow(QWidget):
         padding: 15px;
         color: white;
     }
+    QPushButton:hover{
+        border: 0px solid rgb(119,136,153);
+        padding: 15px;
+        color: rgb(119,136,153);
+    }
     QPushButton:checked{
         border: 5px solid white;
         border-radius: 20px;
@@ -59,8 +64,8 @@ class settingsWindow(QWidget):
     
     r_style2 = """
     QLabel{
-        background-color:rgb(240,230,140);
-        color:rgb(139,69,19);
+        background-color:rgb(49,52,58);
+        color:white;
         border:5px solid rgb(139,69,19);
         border-radius: 10px;
         padding: 20px;
@@ -328,10 +333,11 @@ class settingsWindow(QWidget):
         self.easy_level_btn.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
         self.medium_level_btn.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
         self.hard_level_btn.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
-        self.level_msg_lbl.setFont(QtGui.QFont("Ink Free",20,QtGui.QFont.Bold))
+        self.level_msg_lbl.setFont(QtGui.QFont("Ink Free",25,QtGui.QFont.Bold))
 
         level_lbl.setAlignment(QtCore.Qt.AlignCenter)
         self.level_msg_lbl.setWordWrap(True)
+        self.level_msg_lbl.setTextFormat(QtCore.Qt.RichText)
 
         self.frame2.setLayout(r_grid_2)
 

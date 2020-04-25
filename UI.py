@@ -84,7 +84,7 @@ class menuWindow(QWidget):
 
         self.setLayout(hbox)
 
-        self.quit_btn.clicked.connect(sys.exit)
+        #self.quit_btn.clicked.connect(sys.exit)
 
         effect = QGraphicsDropShadowEffect()
         effect.setColor(QtGui.QColor(QtCore.Qt.lightGray))
@@ -132,6 +132,7 @@ class gameWindow(QWidget):
     QLabel#obj_1{
         border : 3px solid white;
         border-radius : 5px;
+        background: rgb(112,128,144);
         font: 24px bold;
         font-family: MV Boli;
         color: white;
@@ -252,8 +253,8 @@ class gameWindow(QWidget):
                 self.tiles[i][j].setStyleSheet('border:0px solid black')
                 self.grid.addWidget(self.tiles[i][j],i,j,1,1)
 
-        self.grid.setHorizontalSpacing(10)
-        self.grid.setVerticalSpacing(10)
+        #self.grid.setHorizontalSpacing(10)
+        #self.grid.setVerticalSpacing(10)
         
         #self.back_btn.clicked.connect(self.func)
 

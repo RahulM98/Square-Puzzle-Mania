@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QRect,QPropertyAnimation
 from PyQt5.QtMultimedia import QSoundEffect
 from UI import menuWindow,gameWindow,pauseWindow,gameOverWindow
+from UI_Settings import settingsWindow
 import random
 
 class Node():
@@ -73,22 +74,27 @@ class Node():
 
 class Game():
     def __init__(self):
+        self.pc_screen_height = QApplication.desktop().screenGeometry().height()
         self.levels = {'beginner':3,'easy':4, 'medium':5, 'hard':5}
         self.curr_level = 'beginner'
         self.move_count = 15
         self.time_count = 0
         self.hint_count = 0
-        self.img_no = 1
+        self.curr_img_no = 1
+        self.sound_on = True
+        self.curr_volume = 0.5
         #self.path = []
         #self.idx_path = -1
 
         self.bg_snd = QSoundEffect()
         self.bg_snd.setSource(QtCore.QUrl.fromLocalFile('audio/join.wav'))
         self.bg_snd.setLoopCount(QSoundEffect.Infinite)
+        #self.bg_snd.setVolume(0)
         
         self.menu_snd = QSoundEffect()
         self.menu_snd.setSource(QtCore.QUrl.fromLocalFile('audio/guitar.wav'))
         self.menu_snd.setLoopCount(QSoundEffect.Infinite)
+        #self.menu_snd.setVolume(0)
 
         #clk_snd1 = QSoundEffect()
         #clk_snd1.setSource(QtCore.QUrl.fromLocalFile('audio/click1.wav'))
@@ -107,13 +113,25 @@ class Game():
         #self.timer.start(1000)
 
     def init_menuWindow(self):
-        self.menu_win = menuWindow()
-        self.menu_win.new_game_btn.clicked.connect(self.new_game_btn_func)
-        self.menu_win.score_btn.clicked.connect(self.blank_func)
-        self.menu_win.settings_btn.clicked.connect(self.blank_func)
-        self.menu_win.help_btn.clicked.connect(self.blank_func)
-        self.menu_win.quit_btn.clicked.connect(self.blank_func)
+        def new_game_btn_func():
+            self.init_gameWindow()
+            self.menu_snd.stop()
+            #self.menu_win.close()
 
+        def settings_btn_func():
+            self.init_settingsWindow()
+            
+        self.menu_win = menuWindow()
+        self.menu_win.new_game_btn.clicked.connect(new_game_btn_func)
+        self.menu_win.score_btn.clicked.connect(self.blank_func)
+        self.menu_win.settings_btn.clicked.connect(settings_btn_func)
+        self.menu_win.help_btn.clicked.connect(self.blank_func)
+        self.menu_win.quit_btn.clicked.connect(sys.exit)
+
+        if self.sound_on == True:
+            self.menu_snd.setVolume(self.curr_volume)
+        else:
+            self.menu_snd.setVolume(0)
         self.menu_snd.play()
 
     def init_pauseWindow(self):
@@ -122,45 +140,73 @@ class Game():
         self.pause_win.move_val_lbl.setText(str(self.move_count))
         self.pause_win.help_val_lbl.setText(str(self.hint_count))
         self.pause_win.resume_btn.clicked.connect(self.resume_btn_func)
-        self.pause_win.menu_btn.clicked.connect(self.return_to_menu)
+        self.pause_win.menu_btn.clicked.connect(self.blank_func)
         
     def init_gameWindow(self):
+        def pause_btn_func():
+            self.timer.stop()
+            self.init_pauseWindow()
+        
+        def hint_btn_func():
+            self.hint_count += 1
+            self.game_win.hint_count_lbl.setText(str(self.hint_count))
+            self.auto_solve_puzzle()
+
+        def shuffle_btn_func():
+            self.rearrange_all_tiles(20)
+            #self.game_win.update()
+
+        def return_to_menu():
+            print("Exit from window")
+            self.bg_snd.stop()
+            if self.sound_on == True:
+                self.menu_snd.setVolume(self.curr_volume)
+            else:
+                self.menu_snd.setVolume(0)
+            self.menu_snd.play()
+            self.game_win.close()
+
         self.move_count = 15
         self.time_count = 0
         self.hint_count = 0
         
         self.init_board()
         self.game_win = gameWindow(self.levels[self.curr_level])
-        self.game_win.pause_btn.clicked.connect(self.pause_btn_func)
-        self.game_win.hint_btn.clicked.connect(self.hint_btn_func)
-        self.game_win.shuffle_btn.clicked.connect(self.shuffle_btn_func)
-        self.game_win.back_btn.clicked.connect(self.return_to_menu)
+        self.game_win.pause_btn.clicked.connect(pause_btn_func)
+        self.game_win.hint_btn.clicked.connect(hint_btn_func)
+        self.game_win.shuffle_btn.clicked.connect(shuffle_btn_func)
+        self.game_win.back_btn.clicked.connect(return_to_menu)
         for i in range(self.levels[self.curr_level]):
             for j in range(self.levels[self.curr_level]):
                 self.game_win.tiles[i][j].clicked.connect(lambda _,x=i,y=j: self.btn_pressed(x,y))
-        height = QApplication.desktop().screenGeometry().height() // 2.4
-        self.game_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.img_no)).scaled(height,height,QtCore.Qt.KeepAspectRatio))
+        height = self.pc_screen_height // 2.4
+        self.game_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_img_no)).scaled(height,height,QtCore.Qt.KeepAspectRatio))
         #Fill Message area
         if self.curr_level == 'hard':
             self.game_win.shuffle_btn.setEnabled(True)
             self.game_win.hint_btn.setEnabled(False)
             self.game_win.msg_lbl.setText('HINT button is disabled in '+self.curr_level.upper()+' level')
+            self.rearrange_all_tiles(20)
         else:
             self.game_win.shuffle_btn.setEnabled(False)
             self.game_win.hint_btn.setEnabled(True)
             self.game_win.msg_lbl.setText('SHUFFLE button is disabled in '+self.curr_level.upper()+' level')
+            self.rearrange_all_tiles(10)
         self.game_win.msg_lbl.setWordWrap(True)
         self.game_win.move_count_lbl.setText(str(self.move_count))
         print("Backend : ",self.game_win.tiles[0][0].size())
 
-        self.rearrange_all_tiles(10)
+        #self.rearrange_all_tiles(10)
 
         #time counter
         self.timer.timeout.connect(self.timer_handler)
         self.timer.start(1000)
 
         #sound
-        self.bg_snd.setVolume(1.0)
+        if self.sound_on == True:
+            self.bg_snd.setVolume(self.curr_volume)
+        else:
+            self.bg_snd.setVolume(0)
         self.bg_snd.play()
 
     def init_gameOverWindow(self):
@@ -189,35 +235,35 @@ class Game():
         self.game_win.time_val_lbl.setText(self.get_time_with_format())
         #print("A")
 
-    def pause_btn_func(self):
+    """def pause_btn_func(self):
         self.timer.stop()
-        self.init_pauseWindow()
+        self.init_pauseWindow()"""
 
     def resume_btn_func(self):
         self.timer.start(1000)
         self.pause_win.close()
 
-    def hint_btn_func(self):
+    """def hint_btn_func(self):
         self.hint_count += 1
         self.game_win.hint_count_lbl.setText(str(self.hint_count))
-        self.auto_solve_puzzle()
+        self.auto_solve_puzzle()"""
 
-    def shuffle_btn_func(self):
-        pass
+    """def shuffle_btn_func(self):
+        pass"""
 
-    def return_to_menu(self):
+    """def return_to_menu(self):
         print("Exit from window")
         self.bg_snd.stop()
         self.menu_snd.play()
-        self.game_win.close()
+        self.game_win.close()"""
 
     def blank_func(self):
         pass
 
-    def new_game_btn_func(self):
+    """def new_game_btn_func(self):
         self.init_gameWindow()
         self.menu_snd.stop()
-        #self.menu_win.close()
+        #self.menu_win.close()"""
     
     def btn_pressed(self,i,j):
         n = self.levels[self.curr_level]
@@ -315,15 +361,17 @@ class Game():
                 prev_choice = choice
                 number += 1
         
+        btn_w = self.game_win.tiles[0][0].width()
+        btn_h = self.game_win.tiles[0][0].height()
         #place images on appropriate tiles
         for i in range(n):
             for j in range(n):
                 c = self.board[i][j]
                 if c != 0:
-                    self.game_win.tiles[i][j].setIcon(QtGui.QIcon('{}/{}/{}.jpg'.format(self.curr_level,self.img_no,c)))
+                    self.game_win.tiles[i][j].setIcon(QtGui.QIcon('{}/{}/{}.jpg'.format(self.curr_level,self.curr_img_no,c)))
                 else:
                     self.game_win.tiles[i][j].setIcon(QtGui.QIcon())
-                self.game_win.tiles[i][j].setIconSize(QtCore.QSize(self.game_win.tiles[i][j].size()))
+                self.game_win.tiles[i][j].setIconSize(QtCore.QSize(btn_w-5,btn_h-5))
 
     def auto_solve_puzzle(self):
         n = self.levels[self.curr_level]
@@ -433,6 +481,168 @@ class Game():
 
     def calculate_score(self):
         return 0
+
+    # Settings area
+    def init_settingsWindow(self):
+        def left_side_toggle():
+            source = self.settings_win.sender()
+            if source.text() == "Change Picture":
+                self.settings_win.pic_btn.setChecked(True)
+                self.settings_win.level_btn.setChecked(False)
+                self.settings_win.sound_btn.setChecked(False)
+                self.settings_win.stackedWidget.setCurrentIndex(0)
+            elif source.text() == "Change Level":
+                self.settings_win.pic_btn.setChecked(False)
+                self.settings_win.level_btn.setChecked(True)
+                self.settings_win.sound_btn.setChecked(False)
+                self.settings_win.stackedWidget.setCurrentIndex(1)
+            elif source.text() == "Sound":
+                self.settings_win.pic_btn.setChecked(False)
+                self.settings_win.level_btn.setChecked(False)
+                self.settings_win.sound_btn.setChecked(True)
+                self.settings_win.stackedWidget.setCurrentIndex(2)
+        
+        #Right side part 1
+        def select_img_func():
+            self.settings_win.select_img_btn.setText("Selected")
+            self.settings_win.select_img_btn.setChecked(True)
+            self.curr_img_no = self.curr_imgShown_no
+
+        def left_img_func():
+            h = self.pc_screen_height // 1.6
+            self.curr_imgShown_no -= 1
+            self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+            if self.curr_imgShown_no == 1:
+                self.settings_win.left_img_btn.setDisabled(True)
+            else:
+                self.settings_win.left_img_btn.setEnabled(True)
+            self.settings_win.right_img_btn.setEnabled(True)
+            if self.curr_imgShown_no == self.curr_img_no:
+                self.settings_win.select_img_btn.setText("Selected")
+                self.settings_win.select_img_btn.setChecked(True)
+            else:
+                self.settings_win.select_img_btn.setText("Select")
+                self.settings_win.select_img_btn.setChecked(False)
+
+        def right_img_func():
+            h = self.pc_screen_height // 1.6
+            self.curr_imgShown_no += 1
+            self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+            if self.curr_imgShown_no == 22:
+                self.settings_win.right_img_btn.setDisabled(True)
+            else:
+                self.settings_win.right_img_btn.setEnabled(True)
+            self.settings_win.left_img_btn.setEnabled(True)
+            if self.curr_imgShown_no == self.curr_img_no:
+                self.settings_win.select_img_btn.setText("Selected")
+                self.settings_win.select_img_btn.setChecked(True)
+            else:
+                self.settings_win.select_img_btn.setText("Select")
+                self.settings_win.select_img_btn.setChecked(False)
+
+        #Right side Part 2
+        def right_side_toggle():
+            source = self.settings_win.sender()
+            if source.text() == 'Beginner':
+                self.settings_win.beginner_level_btn.setChecked(True)
+                self.settings_win.easy_level_btn.setChecked(False)
+                self.settings_win.medium_level_btn.setChecked(False)
+                self.settings_win.hard_level_btn.setChecked(False)
+                self.curr_level = 'beginner'
+                #self.settings_win.level_msg_lbl.setText('')
+            elif source.text() == 'Easy':
+                self.settings_win.beginner_level_btn.setChecked(False)
+                self.settings_win.easy_level_btn.setChecked(True)
+                self.settings_win.medium_level_btn.setChecked(False)
+                self.settings_win.hard_level_btn.setChecked(False)
+                self.curr_level = 'easy'
+                #self.settings_win.level_msg_lbl.setText('')
+            elif source.text() == 'Medium':
+                self.settings_win.beginner_level_btn.setChecked(False)
+                self.settings_win.easy_level_btn.setChecked(False)
+                self.settings_win.medium_level_btn.setChecked(True)
+                self.settings_win.hard_level_btn.setChecked(False)
+                self.curr_level = 'medium'
+                #self.settings_win.level_msg_lbl.setText('')
+            elif source.text() == 'Hard':
+                self.settings_win.beginner_level_btn.setChecked(False)
+                self.settings_win.easy_level_btn.setChecked(False)
+                self.settings_win.medium_level_btn.setChecked(False)
+                self.settings_win.hard_level_btn.setChecked(True)
+                self.curr_level = 'hard'
+                #self.settings_win.level_msg_lbl.setText('')
+
+        #Right side Part3
+        def checkBox_state_change(state):
+            #source = self.settings_win.sender()
+            if state == QtCore.Qt.Checked:
+                self.sound_on = True
+                self.menu_snd.setVolume(self.curr_volume)
+            else:
+                self.sound_on = False
+                self.menu_snd.setVolume(0)
+
+        def slider_value_change():
+            self.curr_volume = self.settings_win.slider.value()/100
+            self.settings_win.vol_value.setText(str(int(self.curr_volume*100)))
+            self.menu_snd.setVolume(self.curr_volume)
+            self.bg_snd.setVolume(self.curr_volume)
+
+        self.curr_imgShown_no = self.curr_img_no
+        self.settings_win = settingsWindow()
+        #left side
+        self.settings_win.pic_btn.clicked.connect(left_side_toggle)
+        self.settings_win.level_btn.clicked.connect(left_side_toggle)
+        self.settings_win.sound_btn.clicked.connect(left_side_toggle)
+        self.settings_win.back_btn.clicked.connect(self.settings_win.close)
+
+        #right side
+        h = self.pc_screen_height // 1.6
+        self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_img_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+
+        self.settings_win.left_img_btn.clicked.connect(left_img_func)
+        self.settings_win.right_img_btn.clicked.connect(right_img_func)
+        self.settings_win.select_img_btn.clicked.connect(select_img_func)
+
+        self.settings_win.select_img_btn.setText("Selected")
+        self.settings_win.select_img_btn.setChecked(True)
+
+        if self.curr_img_no == 1:
+            self.settings_win.left_img_btn.setDisabled(True)
+        elif self.curr_img_no == 22:
+            self.settings_win.right_img_btn.setDisabled(True)
+
+        #Part2
+        self.settings_win.beginner_level_btn.clicked.connect(right_side_toggle)
+        self.settings_win.easy_level_btn.clicked.connect(right_side_toggle)
+        self.settings_win.medium_level_btn.clicked.connect(right_side_toggle)
+        self.settings_win.hard_level_btn.clicked.connect(right_side_toggle)
+
+        if self.curr_level == 'beginner':
+            self.settings_win.beginner_level_btn.setChecked(True)
+        elif self.curr_level == 'easy':
+            self.settings_win.easy_level_btn.setChecked(True)
+        elif self.curr_level == 'medium':
+            self.settings_win.medium_level_btn.setChecked(True)
+        elif self.curr_level == 'hard':
+            self.settings_win.hard_level_btn.setChecked(True)
+
+        #Part3
+        self.settings_win.sound_on_check.stateChanged.connect(checkBox_state_change)
+        self.settings_win.slider.valueChanged.connect(slider_value_change)
+
+        if self.sound_on == True:
+            self.settings_win.sound_on_check.setChecked(True)
+        else:
+            self.settings_win.sound_on_check.setChecked(False)
+        self.settings_win.vol_value.setText(str(int(self.curr_volume*100)))
+        self.settings_win.slider.setValue(int(self.curr_volume*100))
+
+        if self.sound_on == True:
+            self.menu_snd.setVolume(self.curr_volume)
+        else:
+            self.menu_snd.setVolume(0)
+
 
 # move tile[x1][y1] to tile[x2][y2], so zero is in tile[x1][y1] now
 def shuffle_nos(x1,y1,x2,y2,arr,n):

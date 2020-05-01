@@ -10,9 +10,9 @@ from PyQt5 import QtWidgets,QtCore,QtGui
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QRect,QPropertyAnimation
 from PyQt5.QtMultimedia import QSoundEffect
-from UI import menuWindow,gameWindow,pauseWindow,gameOverWindow,scoreWindow
+from UI import menuWindow,gameWindow,pauseWindow,gameOverWindow,helpWindow,scoreWindow,dialogWindow
 from UI_Settings import settingsWindow
-from Help import helpWindow
+#from Help import helpWindow
 from DB import database
 import random
 from datetime import datetime
@@ -138,13 +138,25 @@ class Game():
 
         def help_btn_func():
             self.init_helpWindow()
+
+        def quit_btn_func():
+            def dia_y_btn_func():
+                self.dialog_win.close()
+                self.menu_win.close()
+                self.db.c.close()
+                self.db.conn.close()
+                sys.exit()
+
+            self.dialog_win = dialogWindow(2,"Exit Game?","Are you sure you want to exit game?")
+            self.dialog_win.yes_btn.clicked.connect(dia_y_btn_func)
+            self.dialog_win.no_btn.clicked.connect(self.dialog_win.close)
             
         self.menu_win = menuWindow()
         self.menu_win.new_game_btn.clicked.connect(new_game_btn_func)
         self.menu_win.score_btn.clicked.connect(score_btn_func)
         self.menu_win.settings_btn.clicked.connect(settings_btn_func)
         self.menu_win.help_btn.clicked.connect(help_btn_func)
-        self.menu_win.quit_btn.clicked.connect(sys.exit)
+        self.menu_win.quit_btn.clicked.connect(quit_btn_func)
 
         if self.sound_on == True:
             self.menu_snd.setVolume(self.curr_volume)
@@ -188,14 +200,25 @@ class Game():
             #self.game_win.update()
 
         def return_to_menu():
-            print("Exit from window")
-            self.bg_snd.stop()
-            if self.sound_on == True:
-                self.menu_snd.setVolume(self.curr_volume)
-            else:
-                self.menu_snd.setVolume(0)
-            self.menu_snd.play()
-            self.game_win.close()
+            def dia_y_btn_func():
+                self.dialog_win.close()
+                print("Exit from window")
+                self.bg_snd.stop()
+                if self.sound_on == True:
+                    self.menu_snd.setVolume(self.curr_volume)
+                else:
+                    self.menu_snd.setVolume(0)
+                self.menu_snd.play()
+                self.game_win.close()
+
+            def dia_n_btn_func():
+                self.dialog_win.close()
+                self.timer.start(1000)
+
+            self.dialog_win = dialogWindow(2,"Exit Game?","The Game will be lost. Are you sure you want to quit?")
+            self.dialog_win.yes_btn.clicked.connect(dia_y_btn_func)
+            self.dialog_win.no_btn.clicked.connect(dia_n_btn_func)
+            self.timer.stop()
 
         self.move_count = 15
         self.time_count = 0
@@ -270,6 +293,10 @@ class Game():
         else:
             self.menu_snd.setVolume(0)
 
+    def init_dialogWindow(self,dialog_type,title,message):
+        self.dialog_win = dialogWindow(dialog_type,title,message)
+
+
     def get_time_with_format(self):
         s = self.time_count
         m,s = divmod(s,60)
@@ -319,6 +346,11 @@ class Game():
         #self.menu_win.close()"""
     
     def btn_pressed(self,i,j):
+        def dia_ok_btn_func():
+            self.init_gameOverWindow()
+            self.dialog_win.close()
+            self.game_win.close()
+
         n = self.levels[self.curr_level]
 
         if i == self.blank_i and j == self.blank_j-1: #0 moves left
@@ -344,23 +376,25 @@ class Game():
         else:      #invalid move
             pass
         
+        self.game_win.move_count_lbl.setText(str(self.move_count))
+
         position = fill_position_dict(n,self.board)
         self.blank_i,self.blank_j = position[0]
         if manhattan_dist(n,position) == 0:
             print("game over, winner decided!")
             #Dialog
+            self.dialog_win = dialogWindow(1,"Game Over","Congratulations!!You have won this round. Click Ok to proceed...")
+            self.dialog_win.ok_btn.clicked.connect(dia_ok_btn_func)
             self.calculateScore_updateDB()
-            self.init_gameOverWindow()
-
+            
+        elif self.move_count == 0:
+            print("Out of moves")
         """for x in range(3):
             for y in range(3):
                 print(self.board[x][y],end=" ")
             print()
         print()"""
 
-        self.game_win.move_count_lbl.setText(str(self.move_count))
-        if self.move_count == 0:
-            print("Out of moves")
 
     def calculateScore_updateDB(self):
         self.timer.stop()
@@ -508,6 +542,11 @@ class Game():
             closed_list.append(curr_node)
 
     def generate_solution(self,curr_node):
+        def dia_ok_btn_func():
+            self.init_gameOverWindow()
+            self.dialog_win.close()
+            self.game_win.close()
+
         size = self.levels[self.curr_level]
         goal = curr_node
         while(curr_node.parent_node != None):
@@ -519,6 +558,8 @@ class Game():
         self.blank_i,self.blank_j = x,y
         if goal.parent_node == curr_node:
             #Dialog
+            self.dialog_win = dialogWindow(1,"Game Over","Congratulations!!You have won this round. Click Ok to proceed...")
+            self.dialog_win.ok_btn.clicked.connect(dia_ok_btn_func)
             self.calculateScore_updateDB()
             self.init_gameOverWindow()
 

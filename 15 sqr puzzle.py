@@ -1,3 +1,9 @@
+## Title: 15 sqr puzzle.py
+## Name : 
+## @author : Rahul Manna
+## Created on : 2020-04-10 20:28:33
+## Description : 
+
 class puzzle():
     def __init__(self):
         self.size = 3

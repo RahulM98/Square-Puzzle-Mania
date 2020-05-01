@@ -1,3 +1,9 @@
+## Title: UI_Settings.py
+## Name : 
+## @author : Rahul Manna
+## Created on : 2020-04-23 17:34:47
+## Description : 
+
 import sys
 import PyQt5
 from PyQt5 import QtWidgets,QtCore,QtGui
@@ -262,12 +268,14 @@ class settingsWindow(QWidget):
         self.show()
 
     def init_frame1(self):
+        self.img_no_lbl = QLabel("00/22")
         self.img_lbl = QLabel("")
         self.left_img_btn = QPushButton("<")
         self.right_img_btn = QPushButton(">")
         self.select_img_btn = QPushButton("Select")
 
         r_grid_1 = QGridLayout()
+        r_grid_1.addWidget(self.img_no_lbl,0,2,1,1)
         r_grid_1.addWidget(self.img_lbl,1,0,1,5)
         r_grid_1.addWidget(self.left_img_btn,3,1,1,1)
         r_grid_1.addWidget(self.select_img_btn,3,2,1,1)
@@ -288,8 +296,12 @@ class settingsWindow(QWidget):
 
         self.select_img_btn.setCheckable(True)
 
+        self.img_no_lbl.setFont(QtGui.QFont("MV Boli",20,QtGui.QFont.Bold))
+
+        self.img_no_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.img_no_lbl.setStyleSheet('color: rgb(0,0,128);border-color:rgb(139,69,19);border-style:solid;border-width:0 5px 0 5px;')
         self.img_lbl.setAlignment(QtCore.Qt.AlignCenter)
-        self.img_lbl.setStyleSheet('padding: 10px;border-top: 5px solid rgb(139,69,19);border-bottom: 5px solid rgb(139,69,19)')
+        self.img_lbl.setStyleSheet('padding: 10px;border-top: 5px solid rgb(139,69,19);border-bottom: 5px solid rgb(139,69,19);')
         self.left_img_btn.setStyleSheet(self.r_style1)
         self.right_img_btn.setStyleSheet(self.r_style1)
         self.select_img_btn.setStyleSheet(self.r_style1)

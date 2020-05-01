@@ -1,3 +1,9 @@
+## Title: game.py
+## Name : 
+## @author : Rahul Manna
+## Created on : 2020-04-09 11:48:42
+## Description : 
+
 import sys
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication,QTableWidgetItem

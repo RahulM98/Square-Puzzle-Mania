@@ -1,6 +1,12 @@
+## Title: UI.py
+## Name : 
+## @author : Rahul Manna
+## Created on : 2020-04-07 17:58:12
+## Description : 
+
 import sys
 from PyQt5 import QtWidgets,QtGui,QtCore
-from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QLabel,QGridLayout,QHBoxLayout,QVBoxLayout,QFrame,QCheckBox,QGraphicsDropShadowEffect
+from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QLabel,QGridLayout,QHBoxLayout,QVBoxLayout,QFrame,QCheckBox,QScrollArea,QGraphicsDropShadowEffect
 import math
 
 class splashWindow(QWidget):
@@ -50,7 +56,7 @@ class menuWindow(QWidget):
     def initUI(self):
         lbl = QLabel("Square Puzzle Mania")
         self.new_game_btn = QPushButton("New Game")
-        self.score_btn = QPushButton("View Score")
+        self.score_btn = QPushButton("High Scores")
         self.settings_btn = QPushButton("Settings")
         self.help_btn = QPushButton("Help")
         self.quit_btn = QPushButton("Quit Game")
@@ -419,12 +425,176 @@ class gameOverWindow(QWidget):
         self.show()
 
 
+class scoreWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.height = QApplication.desktop().screenGeometry().height()
+        self.width = QApplication.desktop().screenGeometry().width()
+        self.setFixedSize(self.width,self.height)
+        self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
+        self.initUI()
+
+    style = """
+    QFrame{
+        background-color: transparent;
+        border: 0px solid white;
+    }
+    QScrollArea{
+        border-top: 5px ridge rgb(240,240,240);
+        border-bottom: 5px ridge rgb(240,240,240);
+        border-left: 5px ridge rgb(240,240,240);
+        border-right: 1px ridge rgb(240,240,240);
+    }
+    QLabel{
+        padding: 5px;
+        color: white;
+    }
+    QLabel#header{
+        padding: 20px;
+        color: rgb(230,230,250);
+    }
+    QLabel#underline{
+        padding: 20px;
+        color: white;
+        text-decoration: underline;
+    }
+    QPushButton{
+        padding: 10px;
+        color: white;
+        border: 5px solid white;
+        border-radius:6px;
+    }
+    QPushButton:hover{
+        border: 5px solid rgb(119,136,153);
+        border-radius:6px;
+        padding: 10px;
+        color: rgb(119,136,153);
+    }
+    """
+
+    def initUI(self):
+        lbl = QLabel("High Scores")
+        lbl.setFont(QtGui.QFont("Segoe Print",30,QtGui.QFont.Bold))
+        lbl.setObjectName('header')
+
+        beginner_lbl = QLabel("Beginner")
+        easy_lbl = QLabel("Easy")
+        medium_lbl = QLabel("Medium")
+        hard_lbl = QLabel("Hard")
+        self.back_btn = QPushButton("Return to Menu")
+
+        headers = ['High Score','Moves Used','Hints Taken','Time Taken','Played On']
+
+        self.table_value_lbl = []
+        for i in range(80):
+            self.table_value_lbl.append(QLabel("A"))
+            self.table_value_lbl[i].setAlignment(QtCore.Qt.AlignCenter)
+            self.table_value_lbl[i].setFont(QtGui.QFont("MV Boli",20))
+        
+        beginner_lbl.setFont(QtGui.QFont("MV Boli",24,QtGui.QFont.Bold))
+        easy_lbl.setFont(QtGui.QFont("MV Boli",24,QtGui.QFont.Bold))
+        medium_lbl.setFont(QtGui.QFont("MV Boli",24,QtGui.QFont.Bold))
+        hard_lbl.setFont(QtGui.QFont("MV Boli",24,QtGui.QFont.Bold))
+        self.back_btn.setFont(QtGui.QFont("MV Boli",24,QtGui.QFont.Bold))
+
+        c = 0   #table val lbl count
+
+        grid = QGridLayout()
+        #grid.addWidget(lbl,1,1,3,1)
+        #Beginner level
+        grid.addWidget(beginner_lbl,3,1,2,1)
+        #header
+        for i in range(len(headers)):
+            self.table_value_lbl[c].setText(headers[i])
+            grid.addWidget(self.table_value_lbl[c],5,i+1,1,1)
+            self.table_value_lbl[c].setObjectName('underline')
+            c+=1
+        for i in range(3):
+            for j in range(5):
+                grid.addWidget(self.table_value_lbl[c],i+6,j+1,1,1)
+                c+=1
+        
+        #easy level
+        grid.addWidget(easy_lbl,11,1,2,1)
+        #header
+        for i in range(len(headers)):
+            self.table_value_lbl[c].setText(headers[i])
+            grid.addWidget(self.table_value_lbl[c],13,i+1,1,1)
+            self.table_value_lbl[c].setObjectName('underline')
+            c+=1
+        for i in range(3):
+            for j in range(5):
+                grid.addWidget(self.table_value_lbl[c],i+14,j+1,1,1)
+                c+=1
+
+        #medium level
+        grid.addWidget(medium_lbl,18,1,2,1)
+        #header
+        for i in range(len(headers)):
+            self.table_value_lbl[c].setText(headers[i])
+            grid.addWidget(self.table_value_lbl[c],20,i+1,1,1)
+            self.table_value_lbl[c].setObjectName('underline')
+            c+=1
+        for i in range(3):
+            for j in range(5):
+                grid.addWidget(self.table_value_lbl[c],i+21,j+1,1,1)
+                c+=1
+        
+        #hard level
+        grid.addWidget(hard_lbl,25,1,2,1)
+        #header
+        for i in range(len(headers)):
+            self.table_value_lbl[c].setText(headers[i])
+            grid.addWidget(self.table_value_lbl[c],27,i+1,1,1)
+            self.table_value_lbl[c].setObjectName('underline')
+            c+=1
+        for i in range(3):
+            for j in range(5):
+                grid.addWidget(self.table_value_lbl[c],i+28,j+1,1,1)
+                c+=1
+
+        for i in range(31):
+            grid.setRowStretch(i,1)
+        for i in range(7):
+            grid.setColumnStretch(i,7)
+        grid.setColumnStretch(0,1)
+        grid.setColumnStretch(6,1)
+
+        frame = QFrame()
+        frame.setLayout(grid)
+
+        scroll_page = QScrollArea()
+        scroll_page.setWidget(frame)
+        scroll_page.setWidgetResizable(True)
+
+        main_grid = QGridLayout()
+        main_grid.addWidget(lbl,1,1,2,2)
+        main_grid.addWidget(scroll_page,3,1,24,7)
+        main_grid.addWidget(self.back_btn,28,5,1,2)
+
+        for i in range(30):
+            main_grid.setRowStretch(i,1)
+
+        self.setLayout(main_grid)
+
+        image = QtGui.QPixmap('images/6.jpg')
+        image = image.scaled(self.width,self.height)
+        palette = QtGui.QPalette()
+        palette.setBrush(self.backgroundRole(),QtGui.QBrush(image))
+        self.setPalette(palette)
+
+        self.setStyleSheet(self.style)
+
+        self.show()
+
+
+######
 
 
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    win = menuWindow()   #gameWindow(4)
+    win = scoreWindow()       #menuWindow()   #gameWindow(4)
     #win.show()
     sys.exit(app.exec_())

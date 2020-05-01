@@ -1,13 +1,21 @@
+## Title: backend.py
+## Name : 
+## @author : Rahul Manna
+## Created on : 2020-04-15 17:07:08
+## Description : 
+
 #from PIL import Image
 import sys
 from PyQt5 import QtWidgets,QtCore,QtGui
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QRect,QPropertyAnimation
 from PyQt5.QtMultimedia import QSoundEffect
-from UI import menuWindow,gameWindow,pauseWindow,gameOverWindow
+from UI import menuWindow,gameWindow,pauseWindow,gameOverWindow,scoreWindow
 from UI_Settings import settingsWindow
 from Help import helpWindow
+from DB import database
 import random
+from datetime import datetime
 
 class Node():
     def __init__(self,data,n,g_score):  #Zero pos is a list having co ordinates of zero
@@ -81,11 +89,14 @@ class Game():
         self.move_count = 15
         self.time_count = 0
         self.hint_count = 0
+        self.score = 0
         self.curr_img_no = 1
         self.sound_on = True
         self.curr_volume = 0.5
         #self.path = []
         #self.idx_path = -1
+
+        self.db = database()
 
         self.bg_snd = QSoundEffect()
         self.bg_snd.setSource(QtCore.QUrl.fromLocalFile('audio/join.wav'))
@@ -122,12 +133,15 @@ class Game():
         def settings_btn_func():
             self.init_settingsWindow()
 
+        def score_btn_func():
+            self.init_scoreWindow()
+
         def help_btn_func():
             self.init_helpWindow()
             
         self.menu_win = menuWindow()
         self.menu_win.new_game_btn.clicked.connect(new_game_btn_func)
-        self.menu_win.score_btn.clicked.connect(self.blank_func)
+        self.menu_win.score_btn.clicked.connect(score_btn_func)
         self.menu_win.settings_btn.clicked.connect(settings_btn_func)
         self.menu_win.help_btn.clicked.connect(help_btn_func)
         self.menu_win.quit_btn.clicked.connect(sys.exit)
@@ -186,6 +200,7 @@ class Game():
         self.move_count = 15
         self.time_count = 0
         self.hint_count = 0
+        self.score = 0
         
         self.init_board()
         self.game_win = gameWindow(self.levels[self.curr_level])
@@ -232,7 +247,28 @@ class Game():
         self.gameOver_win.time_val_lbl.setText(str(self.get_time_with_format()))
         self.gameOver_win.move_val_lbl.setText(str(self.move_count))
         self.gameOver_win.help_val_lbl.setText(str(self.hint_count))
-        self.gameOver_win.score_val_lbl.setText(str(self.calculate_score()))
+        self.gameOver_win.score_val_lbl.setText(str(self.score))
+
+    def init_scoreWindow(self):
+        def back_btn_func():
+            self.score_win.close()
+ 
+        self.score_win = scoreWindow()
+        self.score_win.back_btn.clicked.connect(back_btn_func)
+
+        c = 0
+        for level in self.levels:
+            c+=5
+            query_result = self.db.show_table(level)
+            for query in query_result:
+                for data in query:
+                    self.score_win.table_value_lbl[c].setText(str(data) if type(data)!=str else data)
+                    c+=1
+
+        if self.sound_on == True:
+            self.menu_snd.setVolume(self.curr_volume)
+        else:
+            self.menu_snd.setVolume(0)
 
     def get_time_with_format(self):
         s = self.time_count
@@ -312,6 +348,8 @@ class Game():
         self.blank_i,self.blank_j = position[0]
         if manhattan_dist(n,position) == 0:
             print("game over, winner decided!")
+            #Dialog
+            self.calculateScore_updateDB()
             self.init_gameOverWindow()
 
         """for x in range(3):
@@ -324,9 +362,28 @@ class Game():
         if self.move_count == 0:
             print("Out of moves")
 
+    def calculateScore_updateDB(self):
+        self.timer.stop()
+        self.score = self.calculate_score()
+        #self.score = 10
+        scores = self.db.get_scores(self.curr_level)
+        for sc in range(3):
+            #print(type(scores[sc][0]))
+            if self.score > scores[sc][0]:
+                print("A")
+                t = datetime.now().strftime("%d-%m-%y %H:%M:%S")
+                total_time = self.get_time_with_format()
+                self.db.addition_deletion(self.curr_level,t,self.move_count,self.hint_count,total_time,self.score)
+                break
+            elif self.score == scores[sc][0]:
+                t = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+                total_time = self.get_time_with_format()
+                self.db.update_table(self.curr_level,t,self.move_count,self.hint_count,total_time,self.score)
+                break
+
     def shuffle_tiles(self,x1,y1,x2,y2):
         
-        print(self.game_win.tiles[1][1].geometry())
+        #print(self.game_win.tiles[1][1].geometry())
         def animation():
             temp = self.game_win.tiles[x1][y1].icon()
             self.game_win.tiles[x1][y1].setIcon(QtGui.QIcon())
@@ -461,7 +518,8 @@ class Game():
         self.shuffle_tiles(x,y,self.blank_i,self.blank_j)
         self.blank_i,self.blank_j = x,y
         if goal.parent_node == curr_node:
-            
+            #Dialog
+            self.calculateScore_updateDB()
             self.init_gameOverWindow()
 
     #Initializing both game board and result board
@@ -529,6 +587,7 @@ class Game():
             h = self.pc_screen_height // 1.6
             self.curr_imgShown_no -= 1
             self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+            self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
             if self.curr_imgShown_no == 1:
                 self.settings_win.left_img_btn.setDisabled(True)
             else:
@@ -545,6 +604,7 @@ class Game():
             h = self.pc_screen_height // 1.6
             self.curr_imgShown_no += 1
             self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+            self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
             if self.curr_imgShown_no == 22:
                 self.settings_win.right_img_btn.setDisabled(True)
             else:
@@ -625,6 +685,7 @@ class Game():
         self.settings_win.right_img_btn.clicked.connect(right_img_func)
         self.settings_win.select_img_btn.clicked.connect(select_img_func)
 
+        self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_img_no))
         self.settings_win.select_img_btn.setText("Selected")
         self.settings_win.select_img_btn.setChecked(True)
 

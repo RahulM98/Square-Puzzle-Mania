@@ -4,7 +4,6 @@
 ## Created on : 2020-04-15 17:07:08
 ## Description : 
 
-#from PIL import Image
 import sys
 from PyQt5 import QtWidgets,QtCore,QtGui
 from PyQt5.QtWidgets import QApplication
@@ -12,7 +11,6 @@ from PyQt5.QtCore import QRect,QPropertyAnimation
 from PyQt5.QtMultimedia import QSoundEffect
 from UI import menuWindow,gameWindow,pauseWindow,gameOverWindow,helpWindow,scoreWindow,dialogWindow
 from UI_Settings import settingsWindow
-#from Help import helpWindow
 from DB import database
 import random
 from datetime import datetime
@@ -169,6 +167,9 @@ class Game():
             self.help_win.close()
 
         self.help_win = helpWindow()
+        self.help_win.img_lbl1.setPixmap(QtGui.QPixmap('images/aa.png').scaled(self.help_win.img_lbl1.width(),self.help_win.img_lbl1.height(),QtCore.Qt.IgnoreAspectRatio))
+        self.help_win.img_lbl2.setPixmap(QtGui.QPixmap('images/dd.png').scaled(self.help_win.img_lbl2.width()-50,self.help_win.img_lbl2.height()-50,QtCore.Qt.IgnoreAspectRatio))
+        self.help_win.img_lbl3.setPixmap(QtGui.QPixmap('images/cc.png').scaled(self.help_win.img_lbl3.width()-50,self.help_win.img_lbl3.height()-50,QtCore.Qt.IgnoreAspectRatio))
         self.help_win.back_btn.clicked.connect(back_btn_func)
         
         if self.sound_on == True:
@@ -178,14 +179,61 @@ class Game():
 
 
     def init_pauseWindow(self):
+        def resume_btn_func():
+            self.timer.start(1000)
+            self.pause_win.close()
+        
+        def settings_btn_func():
+            self.dialog_win = dialogWindow(2,"Exit Game?","The Game will be lost. Are you sure you want to quit?")
+            self.dialog_win.yes_btn.clicked.connect(dia_y_btn_func_1)
+            self.dialog_win.no_btn.clicked.connect(dia_n_btn_func)
+
+        def menu_btn_func():
+            self.dialog_win = dialogWindow(2,"Exit Game?","The Game will be lost. Are you sure you want to quit?")
+            self.dialog_win.yes_btn.clicked.connect(dia_y_btn_func_2)
+            self.dialog_win.no_btn.clicked.connect(dia_n_btn_func)
+
+        def dia_y_btn_func_1():
+            self.bg_snd.stop()
+            if self.sound_on == True:
+                self.menu_snd.setVolume(self.curr_volume)
+            else:
+                self.menu_snd.setVolume(0)
+            self.menu_snd.play()
+            self.init_settingsWindow()
+            self.dialog_win.close()
+            self.pause_win.close()
+            self.game_win.close()
+
+        def dia_y_btn_func_2():
+            self.bg_snd.stop()
+            if self.sound_on == True:
+                self.menu_snd.setVolume(self.curr_volume)
+            else:
+                self.menu_snd.setVolume(0)
+            self.menu_snd.play()
+            self.dialog_win.close()
+            self.pause_win.close()
+            self.game_win.close()
+
+        def dia_n_btn_func():
+            self.dialog_win.close()
+
         self.pause_win = pauseWindow()
-        self.pause_win.time_val_lbl.setText(self.get_time_with_format())
-        self.pause_win.move_val_lbl.setText(str(self.move_count))
-        self.pause_win.help_val_lbl.setText(str(self.hint_count))
-        self.pause_win.resume_btn.clicked.connect(self.resume_btn_func)
-        self.pause_win.menu_btn.clicked.connect(self.blank_func)
+        self.pause_win.resume_btn.clicked.connect(resume_btn_func)
+        self.pause_win.settings_btn.clicked.connect(settings_btn_func)
+        self.pause_win.menu_btn.clicked.connect(menu_btn_func)
+        self.pause_win.sound_on_check.stateChanged.connect(self.checkBox_state_change)
+        if self.sound_on == True:
+            self.pause_win.sound_on_check.setChecked(True)
+        else:
+            self.pause_win.sound_on_check.setChecked(False)
         
     def init_gameWindow(self):
+        def timer_handler():
+            self.time_count += 1
+            self.game_win.time_val_lbl.setText(self.get_time_with_format())
+
         def pause_btn_func():
             self.timer.stop()
             self.init_pauseWindow()
@@ -254,7 +302,7 @@ class Game():
         #self.rearrange_all_tiles(10)
 
         #time counter
-        self.timer.timeout.connect(self.timer_handler)
+        self.timer.timeout.connect(timer_handler)
         self.timer.start(1000)
 
         #sound
@@ -264,13 +312,196 @@ class Game():
             self.bg_snd.setVolume(0)
         self.bg_snd.play()
 
+    # Settings area
+    def init_settingsWindow(self):
+        def left_side_toggle():
+            source = self.settings_win.sender()
+            if source.text() == "Change Picture":
+                self.settings_win.pic_btn.setChecked(True)
+                self.settings_win.level_btn.setChecked(False)
+                self.settings_win.sound_btn.setChecked(False)
+                self.settings_win.stackedWidget.setCurrentIndex(0)
+            elif source.text() == "Change Level":
+                self.settings_win.pic_btn.setChecked(False)
+                self.settings_win.level_btn.setChecked(True)
+                self.settings_win.sound_btn.setChecked(False)
+                self.settings_win.stackedWidget.setCurrentIndex(1)
+            elif source.text() == "Sound":
+                self.settings_win.pic_btn.setChecked(False)
+                self.settings_win.level_btn.setChecked(False)
+                self.settings_win.sound_btn.setChecked(True)
+                self.settings_win.stackedWidget.setCurrentIndex(2)
+        
+        #Right side part 1
+        def select_img_func():
+            self.settings_win.select_img_btn.setText("Selected")
+            self.settings_win.select_img_btn.setChecked(True)
+            self.curr_img_no = self.curr_imgShown_no
+
+        def left_img_func():
+            h = self.pc_screen_height // 1.6
+            self.curr_imgShown_no -= 1
+            self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+            self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
+            if self.curr_imgShown_no == 1:
+                self.settings_win.left_img_btn.setDisabled(True)
+            else:
+                self.settings_win.left_img_btn.setEnabled(True)
+            self.settings_win.right_img_btn.setEnabled(True)
+            if self.curr_imgShown_no == self.curr_img_no:
+                self.settings_win.select_img_btn.setText("Selected")
+                self.settings_win.select_img_btn.setChecked(True)
+            else:
+                self.settings_win.select_img_btn.setText("Select")
+                self.settings_win.select_img_btn.setChecked(False)
+
+        def right_img_func():
+            h = self.pc_screen_height // 1.6
+            self.curr_imgShown_no += 1
+            self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+            self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
+            if self.curr_imgShown_no == 22:
+                self.settings_win.right_img_btn.setDisabled(True)
+            else:
+                self.settings_win.right_img_btn.setEnabled(True)
+            self.settings_win.left_img_btn.setEnabled(True)
+            if self.curr_imgShown_no == self.curr_img_no:
+                self.settings_win.select_img_btn.setText("Selected")
+                self.settings_win.select_img_btn.setChecked(True)
+            else:
+                self.settings_win.select_img_btn.setText("Select")
+                self.settings_win.select_img_btn.setChecked(False)
+
+        #Right side Part 2
+        def right_side_toggle():
+            source = self.settings_win.sender()
+            if source.text() == 'Beginner':
+                self.settings_win.beginner_level_btn.setChecked(True)
+                self.settings_win.easy_level_btn.setChecked(False)
+                self.settings_win.medium_level_btn.setChecked(False)
+                self.settings_win.hard_level_btn.setChecked(False)
+                self.curr_level = 'beginner'
+                self.settings_win.level_msg_lbl.setText("""You get 8 tiles to solve where number of movements is limited. Hint 
+                                                        functionality is available for this level.""")
+            elif source.text() == 'Easy':
+                self.settings_win.beginner_level_btn.setChecked(False)
+                self.settings_win.easy_level_btn.setChecked(True)
+                self.settings_win.medium_level_btn.setChecked(False)
+                self.settings_win.hard_level_btn.setChecked(False)
+                self.curr_level = 'easy'
+                self.settings_win.level_msg_lbl.setText("""You have 15 tiles to arrange with a limited number of movements. Hint 
+                                                        functionality is available for this level.""")
+            elif source.text() == 'Medium':
+                self.settings_win.beginner_level_btn.setChecked(False)
+                self.settings_win.easy_level_btn.setChecked(False)
+                self.settings_win.medium_level_btn.setChecked(True)
+                self.settings_win.hard_level_btn.setChecked(False)
+                self.curr_level = 'medium'
+                self.settings_win.level_msg_lbl.setText("""You get 24 tiles to arrange properly in a limited number of movements. Hint 
+                                                        functionality is available for this level.""")
+            elif source.text() == 'Hard':
+                self.settings_win.beginner_level_btn.setChecked(False)
+                self.settings_win.easy_level_btn.setChecked(False)
+                self.settings_win.medium_level_btn.setChecked(False)
+                self.settings_win.hard_level_btn.setChecked(True)
+                self.curr_level = 'hard'
+                self.settings_win.level_msg_lbl.setText("""You have 24 tiles where the number of movements are not limited. Shuffle feature 
+                                                        is available for this level""")
+
+        #Right side Part3
+        def slider_value_change():
+            self.curr_volume = self.settings_win.slider.value()/100
+            self.settings_win.vol_value.setText(str(int(self.curr_volume*100)))
+            self.menu_snd.setVolume(self.curr_volume)
+            self.bg_snd.setVolume(self.curr_volume)
+
+        self.curr_imgShown_no = self.curr_img_no
+        self.settings_win = settingsWindow()
+        #left side
+        self.settings_win.pic_btn.clicked.connect(left_side_toggle)
+        self.settings_win.level_btn.clicked.connect(left_side_toggle)
+        self.settings_win.sound_btn.clicked.connect(left_side_toggle)
+        self.settings_win.back_btn.clicked.connect(self.settings_win.close)
+
+        #right side
+        h = self.pc_screen_height // 1.6
+        self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_img_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+
+        self.settings_win.left_img_btn.clicked.connect(left_img_func)
+        self.settings_win.right_img_btn.clicked.connect(right_img_func)
+        self.settings_win.select_img_btn.clicked.connect(select_img_func)
+
+        self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_img_no))
+        self.settings_win.select_img_btn.setText("Selected")
+        self.settings_win.select_img_btn.setChecked(True)
+
+        if self.curr_img_no == 1:
+            self.settings_win.left_img_btn.setDisabled(True)
+        elif self.curr_img_no == 22:
+            self.settings_win.right_img_btn.setDisabled(True)
+
+        #Part2
+        self.settings_win.beginner_level_btn.clicked.connect(right_side_toggle)
+        self.settings_win.easy_level_btn.clicked.connect(right_side_toggle)
+        self.settings_win.medium_level_btn.clicked.connect(right_side_toggle)
+        self.settings_win.hard_level_btn.clicked.connect(right_side_toggle)
+
+        if self.curr_level == 'beginner':
+            self.settings_win.beginner_level_btn.setChecked(True)
+            self.settings_win.level_msg_lbl.setText("""You get 8 tiles to solve where number of movements is limited. Hint 
+                                                        functionality is available for this level.""")
+        elif self.curr_level == 'easy':
+            self.settings_win.easy_level_btn.setChecked(True)
+            self.settings_win.level_msg_lbl.setText("""You have 15 tiles to arrange with a limited number of movements. Hint 
+                                                        functionality is available for this level.""")
+        elif self.curr_level == 'medium':
+            self.settings_win.medium_level_btn.setChecked(True)
+            self.settings_win.level_msg_lbl.setText("""You get 24 tiles to arrange properly in a limited number of movements. Hint 
+                                                        functionality is available for this level.""")
+        elif self.curr_level == 'hard':
+            self.settings_win.hard_level_btn.setChecked(True)
+            self.settings_win.level_msg_lbl.setText("""You have 24 tiles where the number of movements are not limited. Shuffle feature 
+                                                        is available for this level""")
+
+        #Part3
+        self.settings_win.sound_on_check.stateChanged.connect(self.checkBox_state_change)
+        self.settings_win.slider.valueChanged.connect(slider_value_change)
+
+        if self.sound_on == True:
+            self.settings_win.sound_on_check.setChecked(True)
+        else:
+            self.settings_win.sound_on_check.setChecked(False)
+        self.settings_win.vol_value.setText(str(int(self.curr_volume*100)))
+        self.settings_win.slider.setValue(int(self.curr_volume*100))
+
+        if self.sound_on == True:
+            self.menu_snd.setVolume(self.curr_volume)
+        else:
+            self.menu_snd.setVolume(0)
+
     def init_gameOverWindow(self):
+        def menu_btn_func():
+            self.bg_snd.stop()
+            if self.sound_on == True:
+                self.menu_snd.setVolume(self.curr_volume)
+            else:
+                self.menu_snd.setVolume(0)
+            self.menu_snd.play()
+            self.gameOver_win.close()
+
+        def again_btn_func():
+            self.init_gameWindow()
+            self.gameOver_win.close()
+
         self.timer.stop()
         self.gameOver_win = gameOverWindow()
+        self.gameOver_win.lvl_val_lbl.setText(self.curr_level.upper())
         self.gameOver_win.time_val_lbl.setText(str(self.get_time_with_format()))
         self.gameOver_win.move_val_lbl.setText(str(self.move_count))
         self.gameOver_win.help_val_lbl.setText(str(self.hint_count))
         self.gameOver_win.score_val_lbl.setText(str(self.score))
+        self.gameOver_win.menu_btn.clicked.connect(menu_btn_func)
+        self.gameOver_win.again_btn.clicked.connect(again_btn_func)
 
     def init_scoreWindow(self):
         def back_btn_func():
@@ -297,6 +528,17 @@ class Game():
         self.dialog_win = dialogWindow(dialog_type,title,message)
 
 
+    def checkBox_state_change(self,state):
+        #source = self.settings_win.sender()
+        if state == QtCore.Qt.Checked:
+            self.sound_on = True
+            self.menu_snd.setVolume(self.curr_volume)
+            self.bg_snd.setVolume(self.curr_volume)
+        else:
+            self.sound_on = False
+            self.menu_snd.setVolume(0)
+            self.bg_snd.setVolume(0)
+
     def get_time_with_format(self):
         s = self.time_count
         m,s = divmod(s,60)
@@ -309,19 +551,19 @@ class Game():
             h = '0'+str(h)
         return '{}:{}:{}'.format(h,m,s)
 
-    def timer_handler(self):
+    """def timer_handler(self):
         self.time_count += 1
         
-        self.game_win.time_val_lbl.setText(self.get_time_with_format())
+        self.game_win.time_val_lbl.setText(self.get_time_with_format())"""
         #print("A")
 
     """def pause_btn_func(self):
         self.timer.stop()
         self.init_pauseWindow()"""
 
-    def resume_btn_func(self):
+    """def resume_btn_func(self):
         self.timer.start(1000)
-        self.pause_win.close()
+        self.pause_win.close()"""
 
     """def hint_btn_func(self):
         self.hint_count += 1
@@ -336,9 +578,6 @@ class Game():
         self.bg_snd.stop()
         self.menu_snd.play()
         self.game_win.close()"""
-
-    def blank_func(self):
-        pass
 
     """def new_game_btn_func(self):
         self.init_gameWindow()
@@ -561,7 +800,7 @@ class Game():
             self.dialog_win = dialogWindow(1,"Game Over","Congratulations!!You have won this round. Click Ok to proceed...")
             self.dialog_win.ok_btn.clicked.connect(dia_ok_btn_func)
             self.calculateScore_updateDB()
-            self.init_gameOverWindow()
+            #self.init_gameOverWindow()
 
     #Initializing both game board and result board
     def init_board(self):
@@ -598,181 +837,172 @@ class Game():
     def calculate_score(self):
         return 0
 
-    # Settings area
-    def init_settingsWindow(self):
-        def left_side_toggle():
-            source = self.settings_win.sender()
-            if source.text() == "Change Picture":
-                self.settings_win.pic_btn.setChecked(True)
-                self.settings_win.level_btn.setChecked(False)
-                self.settings_win.sound_btn.setChecked(False)
-                self.settings_win.stackedWidget.setCurrentIndex(0)
-            elif source.text() == "Change Level":
-                self.settings_win.pic_btn.setChecked(False)
-                self.settings_win.level_btn.setChecked(True)
-                self.settings_win.sound_btn.setChecked(False)
-                self.settings_win.stackedWidget.setCurrentIndex(1)
-            elif source.text() == "Sound":
-                self.settings_win.pic_btn.setChecked(False)
-                self.settings_win.level_btn.setChecked(False)
-                self.settings_win.sound_btn.setChecked(True)
-                self.settings_win.stackedWidget.setCurrentIndex(2)
-        
-        #Right side part 1
-        def select_img_func():
-            self.settings_win.select_img_btn.setText("Selected")
-            self.settings_win.select_img_btn.setChecked(True)
-            self.curr_img_no = self.curr_imgShown_no
-
-        def left_img_func():
-            h = self.pc_screen_height // 1.6
-            self.curr_imgShown_no -= 1
-            self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
-            self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
-            if self.curr_imgShown_no == 1:
-                self.settings_win.left_img_btn.setDisabled(True)
-            else:
-                self.settings_win.left_img_btn.setEnabled(True)
-            self.settings_win.right_img_btn.setEnabled(True)
-            if self.curr_imgShown_no == self.curr_img_no:
-                self.settings_win.select_img_btn.setText("Selected")
-                self.settings_win.select_img_btn.setChecked(True)
-            else:
-                self.settings_win.select_img_btn.setText("Select")
-                self.settings_win.select_img_btn.setChecked(False)
-
-        def right_img_func():
-            h = self.pc_screen_height // 1.6
-            self.curr_imgShown_no += 1
-            self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
-            self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
-            if self.curr_imgShown_no == 22:
-                self.settings_win.right_img_btn.setDisabled(True)
-            else:
-                self.settings_win.right_img_btn.setEnabled(True)
-            self.settings_win.left_img_btn.setEnabled(True)
-            if self.curr_imgShown_no == self.curr_img_no:
-                self.settings_win.select_img_btn.setText("Selected")
-                self.settings_win.select_img_btn.setChecked(True)
-            else:
-                self.settings_win.select_img_btn.setText("Select")
-                self.settings_win.select_img_btn.setChecked(False)
-
-        #Right side Part 2
-        def right_side_toggle():
-            source = self.settings_win.sender()
-            if source.text() == 'Beginner':
-                self.settings_win.beginner_level_btn.setChecked(True)
-                self.settings_win.easy_level_btn.setChecked(False)
-                self.settings_win.medium_level_btn.setChecked(False)
-                self.settings_win.hard_level_btn.setChecked(False)
-                self.curr_level = 'beginner'
-                self.settings_win.level_msg_lbl.setText("""You get 8 tiles to solve where number of movements is limited. Hint 
-                                                        functionality is available for this level.""")
-            elif source.text() == 'Easy':
-                self.settings_win.beginner_level_btn.setChecked(False)
-                self.settings_win.easy_level_btn.setChecked(True)
-                self.settings_win.medium_level_btn.setChecked(False)
-                self.settings_win.hard_level_btn.setChecked(False)
-                self.curr_level = 'easy'
-                self.settings_win.level_msg_lbl.setText("""You have 15 tiles to arrange with a limited number of movements. Hint 
-                                                        functionality is available for this level.""")
-            elif source.text() == 'Medium':
-                self.settings_win.beginner_level_btn.setChecked(False)
-                self.settings_win.easy_level_btn.setChecked(False)
-                self.settings_win.medium_level_btn.setChecked(True)
-                self.settings_win.hard_level_btn.setChecked(False)
-                self.curr_level = 'medium'
-                self.settings_win.level_msg_lbl.setText("""You get 24 tiles to arrange properly in a limited number of movements. Hint 
-                                                        functionality is available for this level.""")
-            elif source.text() == 'Hard':
-                self.settings_win.beginner_level_btn.setChecked(False)
-                self.settings_win.easy_level_btn.setChecked(False)
-                self.settings_win.medium_level_btn.setChecked(False)
-                self.settings_win.hard_level_btn.setChecked(True)
-                self.curr_level = 'hard'
-                self.settings_win.level_msg_lbl.setText("""You have 24 tiles where the number of movements are not limited. Shuffle feature 
-                                                        is available for this level""")
-
-        #Right side Part3
-        def checkBox_state_change(state):
-            #source = self.settings_win.sender()
-            if state == QtCore.Qt.Checked:
-                self.sound_on = True
-                self.menu_snd.setVolume(self.curr_volume)
-            else:
-                self.sound_on = False
-                self.menu_snd.setVolume(0)
-
-        def slider_value_change():
-            self.curr_volume = self.settings_win.slider.value()/100
-            self.settings_win.vol_value.setText(str(int(self.curr_volume*100)))
-            self.menu_snd.setVolume(self.curr_volume)
-            self.bg_snd.setVolume(self.curr_volume)
-
-        self.curr_imgShown_no = self.curr_img_no
-        self.settings_win = settingsWindow()
-        #left side
-        self.settings_win.pic_btn.clicked.connect(left_side_toggle)
-        self.settings_win.level_btn.clicked.connect(left_side_toggle)
-        self.settings_win.sound_btn.clicked.connect(left_side_toggle)
-        self.settings_win.back_btn.clicked.connect(self.settings_win.close)
-
-        #right side
-        h = self.pc_screen_height // 1.6
-        self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_img_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
-
-        self.settings_win.left_img_btn.clicked.connect(left_img_func)
-        self.settings_win.right_img_btn.clicked.connect(right_img_func)
-        self.settings_win.select_img_btn.clicked.connect(select_img_func)
-
-        self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_img_no))
-        self.settings_win.select_img_btn.setText("Selected")
-        self.settings_win.select_img_btn.setChecked(True)
-
-        if self.curr_img_no == 1:
-            self.settings_win.left_img_btn.setDisabled(True)
-        elif self.curr_img_no == 22:
-            self.settings_win.right_img_btn.setDisabled(True)
-
-        #Part2
-        self.settings_win.beginner_level_btn.clicked.connect(right_side_toggle)
-        self.settings_win.easy_level_btn.clicked.connect(right_side_toggle)
-        self.settings_win.medium_level_btn.clicked.connect(right_side_toggle)
-        self.settings_win.hard_level_btn.clicked.connect(right_side_toggle)
-
-        if self.curr_level == 'beginner':
-            self.settings_win.beginner_level_btn.setChecked(True)
-            self.settings_win.level_msg_lbl.setText("""You get 8 tiles to solve where number of movements is limited. Hint 
-                                                        functionality is available for this level.""")
-        elif self.curr_level == 'easy':
-            self.settings_win.easy_level_btn.setChecked(True)
-            self.settings_win.level_msg_lbl.setText("""You have 15 tiles to arrange with a limited number of movements. Hint 
-                                                        functionality is available for this level.""")
-        elif self.curr_level == 'medium':
-            self.settings_win.medium_level_btn.setChecked(True)
-            self.settings_win.level_msg_lbl.setText("""You get 24 tiles to arrange properly in a limited number of movements. Hint 
-                                                        functionality is available for this level.""")
-        elif self.curr_level == 'hard':
-            self.settings_win.hard_level_btn.setChecked(True)
-            self.settings_win.level_msg_lbl.setText("""You have 24 tiles where the number of movements are not limited. Shuffle feature 
-                                                        is available for this level""")
-
-        #Part3
-        self.settings_win.sound_on_check.stateChanged.connect(checkBox_state_change)
-        self.settings_win.slider.valueChanged.connect(slider_value_change)
-
-        if self.sound_on == True:
-            self.settings_win.sound_on_check.setChecked(True)
-        else:
-            self.settings_win.sound_on_check.setChecked(False)
-        self.settings_win.vol_value.setText(str(int(self.curr_volume*100)))
-        self.settings_win.slider.setValue(int(self.curr_volume*100))
-
-        if self.sound_on == True:
-            self.menu_snd.setVolume(self.curr_volume)
-        else:
-            self.menu_snd.setVolume(0)
+    #"""# Settings area
+    #def init_settingsWindow(self):
+    #    def left_side_toggle():
+    #        source = self.settings_win.sender()
+    #        if source.text() == "Change Picture":
+    #            self.settings_win.pic_btn.setChecked(True)
+    #            self.settings_win.level_btn.setChecked(False)
+    #            self.settings_win.sound_btn.setChecked(False)
+    #            self.settings_win.stackedWidget.setCurrentIndex(0)
+    #        elif source.text() == "Change Level":
+    #            self.settings_win.pic_btn.setChecked(False)
+    #            self.settings_win.level_btn.setChecked(True)
+    #            self.settings_win.sound_btn.setChecked(False)
+    #            self.settings_win.stackedWidget.setCurrentIndex(1)
+    #        elif source.text() == "Sound":
+    #            self.settings_win.pic_btn.setChecked(False)
+    #            self.settings_win.level_btn.setChecked(False)
+    #            self.settings_win.sound_btn.setChecked(True)
+    #            self.settings_win.stackedWidget.setCurrentIndex(2)
+    #    
+    #    #Right side part 1
+    #    def select_img_func():
+    #        self.settings_win.select_img_btn.setText("Selected")
+    #        self.settings_win.select_img_btn.setChecked(True)
+    #        self.curr_img_no = self.curr_imgShown_no
+    #
+    #    def left_img_func():
+    #        h = self.pc_screen_height // 1.6
+    #        self.curr_imgShown_no -= 1
+    #        self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+    #        self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
+    #        if self.curr_imgShown_no == 1:
+    #            self.settings_win.left_img_btn.setDisabled(True)
+    #        else:
+    #            self.settings_win.left_img_btn.setEnabled(True)
+    #        self.settings_win.right_img_btn.setEnabled(True)
+    #        if self.curr_imgShown_no == self.curr_img_no:
+    #            self.settings_win.select_img_btn.setText("Selected")
+    #            self.settings_win.select_img_btn.setChecked(True)
+    #        else:
+    #            self.settings_win.select_img_btn.setText("Select")
+    #            self.settings_win.select_img_btn.setChecked(False)
+    #
+    #    def right_img_func():
+    #        h = self.pc_screen_height // 1.6
+    #        self.curr_imgShown_no += 1
+    #        self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+    #        self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
+    #        if self.curr_imgShown_no == 22:
+    #            self.settings_win.right_img_btn.setDisabled(True)
+    #        else:
+    #            self.settings_win.right_img_btn.setEnabled(True)
+    #        self.settings_win.left_img_btn.setEnabled(True)
+    #        if self.curr_imgShown_no == self.curr_img_no:
+    #            self.settings_win.select_img_btn.setText("Selected")
+    #            self.settings_win.select_img_btn.setChecked(True)
+    #        else:
+    #            self.settings_win.select_img_btn.setText("Select")
+    #            self.settings_win.select_img_btn.setChecked(False)
+    #
+    #    #Right side Part 2
+    #    def right_side_toggle():
+    #        source = self.settings_win.sender()
+    #        if source.text() == 'Beginner':
+    #            self.settings_win.beginner_level_btn.setChecked(True)
+    #            self.settings_win.easy_level_btn.setChecked(False)
+    #            self.settings_win.medium_level_btn.setChecked(False)
+    #            self.settings_win.hard_level_btn.setChecked(False)
+    #            self.curr_level = 'beginner'
+    #            self.settings_win.level_msg_lbl.setText("""You get 8 tiles to solve where number of movements is limited. Hint 
+    #                                                    functionality is available for this level.""")
+    #        elif source.text() == 'Easy':
+    #            self.settings_win.beginner_level_btn.setChecked(False)
+    #            self.settings_win.easy_level_btn.setChecked(True)
+    #            self.settings_win.medium_level_btn.setChecked(False)
+    #            self.settings_win.hard_level_btn.setChecked(False)
+    #            self.curr_level = 'easy'
+    #            self.settings_win.level_msg_lbl.setText("""You have 15 tiles to arrange with a limited number of movements. Hint 
+    #                                                    functionality is available for this level.""")
+    #        elif source.text() == 'Medium':
+    #            self.settings_win.beginner_level_btn.setChecked(False)
+    #            self.settings_win.easy_level_btn.setChecked(False)
+    #            self.settings_win.medium_level_btn.setChecked(True)
+    #            self.settings_win.hard_level_btn.setChecked(False)
+    #            self.curr_level = 'medium'
+    #            self.settings_win.level_msg_lbl.setText("""You get 24 tiles to arrange properly in a limited number of movements. Hint 
+    #                                                    functionality is available for this level.""")
+    #        elif source.text() == 'Hard':
+    #            self.settings_win.beginner_level_btn.setChecked(False)
+    #            self.settings_win.easy_level_btn.setChecked(False)
+    #            self.settings_win.medium_level_btn.setChecked(False)
+    #            self.settings_win.hard_level_btn.setChecked(True)
+    #            self.curr_level = 'hard'
+    #            self.settings_win.level_msg_lbl.setText("""You have 24 tiles where the number of movements are not limited. Shuffle feature 
+    #                                                    is available for this level""")
+    #
+    #    #Right side Part3
+    #    def slider_value_change():
+    #        self.curr_volume = self.settings_win.slider.value()/100
+    #        self.settings_win.vol_value.setText(str(int(self.curr_volume*100)))
+    #        self.menu_snd.setVolume(self.curr_volume)
+    #        self.bg_snd.setVolume(self.curr_volume)
+    #
+    #    self.curr_imgShown_no = self.curr_img_no
+    #    self.settings_win = settingsWindow()
+    #    #left side
+    #    self.settings_win.pic_btn.clicked.connect(left_side_toggle)
+    #    self.settings_win.level_btn.clicked.connect(left_side_toggle)
+    #    self.settings_win.sound_btn.clicked.connect(left_side_toggle)
+    #    self.settings_win.back_btn.clicked.connect(self.settings_win.close)
+    #
+    #    #right side
+    #    h = self.pc_screen_height // 1.6
+    #    self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_img_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
+    #
+    #    self.settings_win.left_img_btn.clicked.connect(left_img_func)
+    #    self.settings_win.right_img_btn.clicked.connect(right_img_func)
+    #    self.settings_win.select_img_btn.clicked.connect(select_img_func)
+    #
+    #    self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_img_no))
+    #    self.settings_win.select_img_btn.setText("Selected")
+    #    self.settings_win.select_img_btn.setChecked(True)
+    #
+    #    if self.curr_img_no == 1:
+    #        self.settings_win.left_img_btn.setDisabled(True)
+    #    elif self.curr_img_no == 22:
+    #        self.settings_win.right_img_btn.setDisabled(True)
+    #
+    #    #Part2
+    #    self.settings_win.beginner_level_btn.clicked.connect(right_side_toggle)
+    #    self.settings_win.easy_level_btn.clicked.connect(right_side_toggle)
+    #    self.settings_win.medium_level_btn.clicked.connect(right_side_toggle)
+    #    self.settings_win.hard_level_btn.clicked.connect(right_side_toggle)
+    #
+    #    if self.curr_level == 'beginner':
+    #        self.settings_win.beginner_level_btn.setChecked(True)
+    #        self.settings_win.level_msg_lbl.setText("""You get 8 tiles to solve where number of movements is limited. Hint 
+    #                                                    functionality is available for this level.""")
+    #    elif self.curr_level == 'easy':
+    #        self.settings_win.easy_level_btn.setChecked(True)
+    #        self.settings_win.level_msg_lbl.setText("""You have 15 tiles to arrange with a limited number of movements. Hint 
+    #                                                    functionality is available for this level.""")
+    #    elif self.curr_level == 'medium':
+    #        self.settings_win.medium_level_btn.setChecked(True)
+    #        self.settings_win.level_msg_lbl.setText("""You get 24 tiles to arrange properly in a limited number of movements. Hint 
+    #                                                    functionality is available for this level.""")
+    #    elif self.curr_level == 'hard':
+    #        self.settings_win.hard_level_btn.setChecked(True)
+    #        self.settings_win.level_msg_lbl.setText("""You have 24 tiles where the number of movements are not limited. Shuffle feature 
+    #                                                    is available for this level""")
+    #
+    #    #Part3
+    #    self.settings_win.sound_on_check.stateChanged.connect(self.checkBox_state_change)
+    #    self.settings_win.slider.valueChanged.connect(slider_value_change)
+    #
+    #    if self.sound_on == True:
+    #        self.settings_win.sound_on_check.setChecked(True)
+    #    else:
+    #        self.settings_win.sound_on_check.setChecked(False)
+    #    self.settings_win.vol_value.setText(str(int(self.curr_volume*100)))
+    #    self.settings_win.slider.setValue(int(self.curr_volume*100))
+    #
+    #    if self.sound_on == True:
+    #        self.menu_snd.setVolume(self.curr_volume)
+    #    else:
+    #        self.menu_snd.setVolume(0)"""
 
 
 # move tile[x1][y1] to tile[x2][y2], so zero is in tile[x1][y1] now

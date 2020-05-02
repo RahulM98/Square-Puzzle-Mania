@@ -342,89 +342,224 @@ class gameWindow(QWidget):
 class pauseWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(800,550)
+        self.setFixedSize(800,500)
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.initUI()
     
+    style = '''
+    QWidget{
+        background: rgb(240,230,140);
+    }
+    QLabel{
+        color: rgb(107,37,4);
+    }
+    QPushButton{
+        border: 5px solid rgb(165,81,5);
+        padding: 15px;
+        border-radius: 10px;
+        color: rgb(107,37,4);
+    }
+    QPushButton:hover{
+        border: 5px solid rgb(107,37,4);
+        padding: 15px;
+        border-radius: 10px;
+        color: rgb(165,81,5);
+    }
+    QCheckBox{
+        color: rgb(107,37,4);
+    }
+    QCheckBox::indicator:checked{
+        height: 35px;
+        width: 35px;
+        image: url('images/check.png');
+    }
+    QCheckBox::indicator:unchecked{
+        height: 35px;
+        width: 35px;
+        image: url('images/uncheck.png');
+    }
+    QCheckBox::indicator:checked:pressed{
+        height: 35px;
+        width: 35px;
+        image: url('images/check.png');
+    }
+    QCheckBox::indicator:unchecked:pressed{
+        height: 35px;
+        width: 35px;
+        image: url('images/uncheck.png');
+    }
+    '''
+
     def initUI(self):
         lbl = QLabel("Game Paused")
-        time_lbl = QLabel("Time Taken : ")
-        self.time_val_lbl = QLabel("")
-        move_lbl = QLabel("No of Moves : ")
-        self.move_val_lbl = QLabel("")
-        help_lbl = QLabel("No of Help Taken : ")
-        self.help_val_lbl = QLabel("")
+        self.sound_on_check = QCheckBox("Sound")
+        self.resume_btn = QPushButton("Resume")
+        self.settings_btn = QPushButton("Settings")
         self.menu_btn = QPushButton("Main Menu")
-        self.resume_btn = QPushButton("Resume Game")
-        self.sound_on = QCheckBox("Sound")
 
         #self.menu_btn.clicked.connect(sys.exit)#################
 
         grid = QGridLayout()
-        grid.addWidget(lbl,0,1,1,3)
-        grid.addWidget(time_lbl,1,1,1,1)
-        grid.addWidget(self.time_val_lbl,1,3,1,1)
-        grid.addWidget(move_lbl,2,1,1,1)
-        grid.addWidget(self.move_val_lbl,2,3,1,1)
-        grid.addWidget(help_lbl,3,1,1,1)
-        grid.addWidget(self.help_val_lbl,3,3,1,1)
-        #grid.addWidget(score_lbl,4,1,1,1)
-        #grid.addWidget(self.score_val_lbl,4,3,1,1)
-        grid.addWidget(self.sound_on,4,2,1,1)
-        grid.addWidget(self.resume_btn,6,1,1,1)
-        grid.addWidget(self.menu_btn,6,3,1,1)
+        grid.addWidget(lbl,0,2,2,3)
+        grid.addWidget(self.sound_on_check,3,3,1,1)
+        grid.addWidget(self.resume_btn,5,1,1,1)
+        grid.addWidget(self.settings_btn,5,3,1,1)
+        grid.addWidget(self.menu_btn,5,5,1,1)
         self.setLayout(grid)
 
-        for i in range(8):
+        for i in range(7):
             grid.setRowStretch(i,1)
-        for i in range(5):
             grid.setColumnStretch(i,1)
+        lbl.setAlignment(QtCore.Qt.AlignCenter)
+        lbl.setFont(QtGui.QFont("MV Boli",30,QtGui.QFont.Bold))
+        self.sound_on_check.setFont(QtGui.QFont("MV Boli",24,QtGui.QFont.Bold))
+        self.resume_btn.setFont(QtGui.QFont("MV Boli",16,QtGui.QFont.Bold))
+        self.settings_btn.setFont(QtGui.QFont("MV Boli",16,QtGui.QFont.Bold))
+        self.menu_btn.setFont(QtGui.QFont("MV Boli",16,QtGui.QFont.Bold))
+
+        self.resume_btn.setToolTip("Resume Game")
+        self.settings_btn.setToolTip("Change Level and Image")
+        self.menu_btn.setToolTip("Return to Main Menu")
+
+        #lbl.
+        #self.sound_on.
+        #self.resume_btn.
+        #self.settings_btn.
+        #self.menu_btn.
+
+        self.setStyleSheet(self.style)
 
         self.show()
 
 class gameOverWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(800,550)
-        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.height = QApplication.desktop().screenGeometry().height()
+        self.width = QApplication.desktop().screenGeometry().width()
+        self.setFixedSize(self.width,self.height)
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.initUI()
     
+    style = '''
+    QLabel#blue_text{
+        color: rgb(0,0,139);
+    }
+    QLabel#white_text{
+        padding: 4px;
+        color: rgb(243,243,244);
+    }
+    QPushButton#blue_text{
+        padding: 5px;
+        color: rgb(0,0,139);
+        border:5px solid rgb(0,0,139);
+        border-radius: 8px;
+    }
+    QPushButton#blue_text:hover{
+        padding: 5px;
+        color: rgb(0,0,255);
+        border:5px solid rgb(0,0,255);
+        border-radius: 8px;
+    }
+    QPushButton#white_text{
+        padding: 5px;
+        color: rgb(243,243,244);
+        border:5px solid rgb(243,243,244);
+        border-radius: 8px;
+    }
+    QPushButton#white_text:hover{
+        padding: 5px;
+        color: rgb(176,196,222);
+        border:5px solid rgb(176,196,222);
+        border-radius: 8px;
+    }
+    '''
     def initUI(self):
         lbl = QLabel("Game Over")
-        time_lbl = QLabel("Time Taken : ")
+        lvl_lbl= QLabel("Level")
+        self.lvl_val_lbl = QLabel("")
+        time_lbl = QLabel("Time Taken")
         self.time_val_lbl = QLabel("")
-        move_lbl = QLabel("No of Moves : ")
+        move_lbl = QLabel("Moves Used")
         self.move_val_lbl = QLabel("")
-        help_lbl = QLabel("No of Help Taken : ")
+        help_lbl = QLabel("Help Taken")
         self.help_val_lbl = QLabel("")
-        score_lbl = QLabel("Total Score : ")
+        score_lbl = QLabel("Total Score")
         self.score_val_lbl = QLabel("")
         self.again_btn = QPushButton("Play Again")
-        self.menu_btn = QPushButton("Return to Main Menu")
+        self.menu_btn = QPushButton("Main Menu")
 
-        self.menu_btn.clicked.connect(sys.exit)#################
+        #self.menu_btn.clicked.connect(sys.exit)#################
 
         grid = QGridLayout()
-        grid.addWidget(lbl,0,1,1,3)
-        grid.addWidget(time_lbl,1,1,1,1)
-        grid.addWidget(self.time_val_lbl,1,3,1,1)
-        grid.addWidget(move_lbl,2,1,1,1)
-        grid.addWidget(self.move_val_lbl,2,3,1,1)
-        grid.addWidget(help_lbl,3,1,1,1)
-        grid.addWidget(self.help_val_lbl,3,3,1,1)
-        grid.addWidget(score_lbl,4,1,1,1)
-        grid.addWidget(self.score_val_lbl,4,3,1,1)
-        grid.addWidget(self.again_btn,6,1,1,1)
-        grid.addWidget(self.menu_btn,6,3,1,1)
+        grid.addWidget(lbl,1,2,1,1)
+        grid.addWidget(lvl_lbl,3,1,1,1)
+        grid.addWidget(self.lvl_val_lbl,3,3,1,1)
+        grid.addWidget(time_lbl,4,1,1,1)
+        grid.addWidget(self.time_val_lbl,4,3,1,1)
+        grid.addWidget(move_lbl,5,1,1,1)
+        grid.addWidget(self.move_val_lbl,5,3,1,1)
+        grid.addWidget(help_lbl,6,1,1,1)
+        grid.addWidget(self.help_val_lbl,6,3,1,1)
+        grid.addWidget(score_lbl,7,1,1,1)
+        grid.addWidget(self.score_val_lbl,7,3,1,1)
+        grid.addWidget(self.menu_btn,9,1,1,1)
+        grid.addWidget(self.again_btn,9,3,1,1)
         self.setLayout(grid)
-
-        for i in range(8):
+        for i in range(11):
             grid.setRowStretch(i,1)
         for i in range(5):
             grid.setColumnStretch(i,1)
+        #grid.setColumnStretch(2,2)
 
+        lbl.setObjectName("white_text")
+        lvl_lbl.setObjectName("blue_text")
+        time_lbl.setObjectName("blue_text")
+        move_lbl.setObjectName("blue_text")
+        help_lbl.setObjectName("blue_text")
+        score_lbl.setObjectName("blue_text")
+        self.lvl_val_lbl.setObjectName("white_text")
+        self.time_val_lbl.setObjectName("white_text")
+        self.move_val_lbl.setObjectName("white_text")
+        self.help_val_lbl.setObjectName("white_text")
+        self.score_val_lbl.setObjectName("white_text")
+        self.again_btn.setObjectName("white_text")
+        self.menu_btn.setObjectName("blue_text")
+
+        lbl.setFont(QtGui.QFont("MV Boli",40,QtGui.QFont.Bold))
+        lvl_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        time_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        move_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        help_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        score_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        self.lvl_val_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        self.time_val_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        self.move_val_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        self.help_val_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        self.score_val_lbl.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        self.again_btn.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+        self.menu_btn.setFont(QtGui.QFont("MV Boli",28,QtGui.QFont.Bold))
+
+        lbl.setAlignment(QtCore.Qt.AlignRight)
+        lvl_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        time_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        move_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        help_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        score_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.lvl_val_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.time_val_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.move_val_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.help_val_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.score_val_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        #self.again_btn.setAlignment(QtCore.Qt.AlignCenter)
+        #self.menu_btn.setAlignment(QtCore.Qt.AlignCenter)
+
+        image = QtGui.QPixmap('images/aaa.jpg')
+        image = image.scaled(self.width,self.height)
+        palette = QtGui.QPalette()
+        palette.setBrush(self.backgroundRole(),QtGui.QBrush(image))
+        self.setPalette(palette)
+        self.setStyleSheet(self.style)
         self.show()
 
 
@@ -633,7 +768,10 @@ class helpWindow(QWidget):
         name_lbl = QLabel("Help")
         name_lbl.setFont(QtGui.QFont("Segoe Print",30,QtGui.QFont.Bold))
         name_lbl.setStyleSheet('color: rgb(230,230,250);padding-left: 100px;padding-right: 10px;')
-
+        self.img_lbl1 = QLabel("")
+        self.img_lbl2 = QLabel("")
+        self.img_lbl3 = QLabel("")
+        
         self.back_btn.setFont(QtGui.QFont("MV Boli",22,QtGui.QFont.Bold))
         txt_lbl = []
         for i in range(19):
@@ -674,11 +812,14 @@ class helpWindow(QWidget):
                             moves used the more score.''')
         txt_lbl[18].setText('''Thank you very much for reading this much. Hope you like the game. <b>:D</b>''')
 
+        #img_lbl1.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_img_no)).scaled(height,height,QtCore.Qt.KeepAspectRatio)))
+        #self.img_lbl1.setPixmap(QtGui.QPixmap('images/aa.jpg').scaled(self.img_lbl1.width(),self.img_lbl1.height(),QtCore.Qt.IgnoreAspectRatio))
+
         grid = QGridLayout()
         grid.addWidget(txt_lbl[0],0,1,1,3)
         grid.addWidget(txt_lbl[1],1,1,1,1)
         grid.addWidget(txt_lbl[2],1,2,1,1)
-        #grid.addWidget(txt_lbl[])   #Add image
+        grid.addWidget(self.img_lbl1,1,3,1,1)   #Add image
         grid.addWidget(txt_lbl[3],2,1,1,3)
         grid.addWidget(txt_lbl[4],3,1,1,1)
         grid.addWidget(txt_lbl[5],3,2,1,2)
@@ -690,10 +831,10 @@ class helpWindow(QWidget):
         grid.addWidget(txt_lbl[11],6,2,1,2)
         grid.addWidget(txt_lbl[12],7,1,1,1)
         grid.addWidget(txt_lbl[13],7,2,1,1)
-        #grid.addWidget(txt_lbl[])   #Add image
+        grid.addWidget(self.img_lbl2,7,3,1,1)   #Add image
         grid.addWidget(txt_lbl[14],8,1,1,1)
         grid.addWidget(txt_lbl[15],8,2,1,1)
-        #grid.addWidget(txt_lbl[])   #Add image
+        grid.addWidget(self.img_lbl3,8,3,1,1)   #Add image
         grid.addWidget(txt_lbl[16],9,1,1,1)
         grid.addWidget(txt_lbl[17],9,2,1,2)
         grid.addWidget(txt_lbl[18],10,1,1,3)
@@ -817,6 +958,6 @@ class dialogWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    win = dialogWindow(1,"Game Over","Congratulations!!You have won this round. Click Ok to proceed...")        #scoreWindow()       #menuWindow()   #gameWindow(4)
+    win = pauseWindow()    #gameOverWindow()     #dialogWindow(1,"Game Over","Congratulations!!You have won this round. Click Ok to proceed...")        #scoreWindow()       #menuWindow()   #gameWindow(4)
     #win.show()
     sys.exit(app.exec_())

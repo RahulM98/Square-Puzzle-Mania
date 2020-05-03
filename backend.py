@@ -84,7 +84,7 @@ class Game():
         self.pc_screen_height = QApplication.desktop().screenGeometry().height()
         self.levels = {'beginner':3,'easy':4, 'medium':5, 'hard':5}
         self.curr_level = 'beginner'
-        self.move_count = 15
+        self.move_count = 0
         self.time_count = 0
         self.hint_count = 0
         self.score = 0
@@ -268,7 +268,7 @@ class Game():
             self.dialog_win.no_btn.clicked.connect(dia_n_btn_func)
             self.timer.stop()
 
-        self.move_count = 15
+        self.move_count = 0
         self.time_count = 0
         self.hint_count = 0
         self.score = 0
@@ -290,13 +290,17 @@ class Game():
             self.game_win.hint_btn.setEnabled(False)
             self.game_win.msg_lbl.setText('HINT button is disabled in '+self.curr_level.upper()+' level')
             self.rearrange_all_tiles(20)
+            self.game_win.move_lbl.setText('Moves Used :')
+            self.game_win.move_count_lbl.setText(str(self.move_count))
         else:
             self.game_win.shuffle_btn.setEnabled(False)
             self.game_win.hint_btn.setEnabled(True)
             self.game_win.msg_lbl.setText('SHUFFLE button is disabled in '+self.curr_level.upper()+' level')
             self.rearrange_all_tiles(10)
+            self.game_win.move_lbl.setText('Move Left :')
+            self.game_win.move_count_lbl.setText(str(15 - self.move_count))
         self.game_win.msg_lbl.setWordWrap(True)
-        self.game_win.move_count_lbl.setText(str(self.move_count))
+        
         print("Backend : ",self.game_win.tiles[0][0].size())
 
         #self.rearrange_all_tiles(10)
@@ -516,7 +520,10 @@ class Game():
             query_result = self.db.show_table(level)
             for query in query_result:
                 for data in query:
-                    self.score_win.table_value_lbl[c].setText(str(data) if type(data)!=str else data)
+                    if query[1] == None:
+                        self.score_win.table_value_lbl[c].setText("--")
+                    else:
+                        self.score_win.table_value_lbl[c].setText(str(data) if type(data)!=str else data)
                     c+=1
 
         if self.sound_on == True:
@@ -596,27 +603,30 @@ class Game():
             shuffle_nos(self.blank_i,self.blank_j,i,j,self.board,n)
             self.shuffle_tiles(i,j,self.blank_i,self.blank_j)
             #self.blank_j = self.blank_j-1
-            self.move_count -= 1
+            self.move_count += 1
         elif i == self.blank_i and j == self.blank_j+1: #0 moves right
             shuffle_nos(self.blank_i,self.blank_j,i,j,self.board,n)
             self.shuffle_tiles(i,j,self.blank_i,self.blank_j)
             #self.blank_j = self.blank_j+1
-            self.move_count -= 1
+            self.move_count += 1
         elif i == self.blank_i-1 and j == self.blank_j: #0 moves up
             shuffle_nos(self.blank_i,self.blank_j,i,j,self.board,n)
             self.shuffle_tiles(i,j,self.blank_i,self.blank_j)
             #self.blank_i = self.blank_i-1
-            self.move_count -= 1
+            self.move_count += 1
         elif i == self.blank_i+1 and j == self.blank_j: #0 moves down
             shuffle_nos(self.blank_i,self.blank_j,i,j,self.board,n)
             self.shuffle_tiles(i,j,self.blank_i,self.blank_j)
             #self.blank_i = self.blank_i+1
-            self.move_count -= 1
+            self.move_count += 1
         else:      #invalid move
             pass
-        
-        self.game_win.move_count_lbl.setText(str(self.move_count))
 
+        if self.curr_level == 'hard':
+            self.game_win.move_count_lbl.setText(str(self.move_count))
+        else:
+            self.game_win.move_count_lbl.setText(str(15 - self.move_count))
+        
         position = fill_position_dict(n,self.board)
         self.blank_i,self.blank_j = position[0]
         if manhattan_dist(n,position) == 0:
@@ -626,8 +636,11 @@ class Game():
             self.dialog_win.ok_btn.clicked.connect(dia_ok_btn_func)
             self.calculateScore_updateDB()
             
-        elif self.move_count == 0:
+        elif self.move_count == 15 and self.curr_level != 'hard':
             print("Out of moves")
+            self.timer.stop()
+            self.dialog_win = dialogWindow(1,"Game Over","You are out of moves!! You have lost this round...")
+            self.dialog_win.ok_btn.clicked.connect(dia_ok_btn_func)
         """for x in range(3):
             for y in range(3):
                 print(self.board[x][y],end=" ")
@@ -835,7 +848,12 @@ class Game():
         #print("Icon size : ",self.game_win.tiles[i][j].iconSize())
 
     def calculate_score(self):
-        return 0
+        completion_score = {'beginner':220,'easy':320,'medium':520,'hard':600}
+        if self.curr_level != 'hard':
+            x = completion_score[self.curr_level] - self.move_count*2 - self.hint_count*5
+        else:
+            x = completion_score[self.curr_level] + self.move_count*2
+        return x
 
     #"""# Settings area
     #def init_settingsWindow(self):
@@ -1037,9 +1055,9 @@ def manhattan_dist(n,position):
         total = total + (abs(goal_row-position[i][0])+abs(goal_col-position[i][1]))
     return total
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     app = QApplication(sys.argv)
     a = Game()
     #a.auto_solve_puzzle()
     #win.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec_())"""

@@ -12,16 +12,41 @@ import math
 class splashWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setFixedSize(500,350)
-        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.height = QApplication.desktop().screenGeometry().height()
+        self.width = QApplication.desktop().screenGeometry().width()
+        self.setFixedSize(self.width,self.height)
+        #self.setFixedSize(500,350)
+        
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.initUI()
     
     def initUI(self):
-        lbl = QLabel("Puzzle Game")
-        hb = QHBoxLayout()
-        hb.addWidget(lbl)
-        self.setLayout(hb)
+        self.game_name_lbl = QLabel("Square Puzzle\nMania")
+        self.game_name_lbl.resize(500,350)
+        self.game_name_lbl.setFont(QtGui.QFont("Segoe Print",46,QtGui.QFont.Bold))
+        self.game_name_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        self.game_name_lbl.setStyleSheet("color: white;")
+
+        effect = QGraphicsDropShadowEffect()
+        effect.setColor(QtGui.QColor(QtCore.Qt.gray))
+        effect.setBlurRadius(15)
+        self.game_name_lbl.setGraphicsEffect(effect)
+        self.game_name_lbl.setWordWrap(True)
+
+        self.co_name_lbl = QLabel("")
+        self.co_name_lbl.setTextFormat(QtCore.Qt.RichText)
+        self.co_name_lbl.setText("a<br><b>ManR</b><br>creation")
+        self.co_name_lbl.setFont(QtGui.QFont("Gabriola",56))
+        self.co_name_lbl.setStyleSheet('color:rgb(255,2,11)')
+        self.co_name_lbl.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.hbox = QHBoxLayout()
+        self.hbox.addWidget(self.game_name_lbl)
+        self.setLayout(self.hbox)
+        
+        palette = QtGui.QPalette()
+        palette.setColor(QtGui.QPalette.Background,QtCore.Qt.black)
+        self.setPalette(palette)
         self.show()
 
 class menuWindow(QWidget):
@@ -956,8 +981,9 @@ class dialogWindow(QWidget):
 
         self.show()
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
     app = QApplication(sys.argv)
-    win = pauseWindow()    #gameOverWindow()     #dialogWindow(1,"Game Over","Congratulations!!You have won this round. Click Ok to proceed...")        #scoreWindow()       #menuWindow()   #gameWindow(4)
+    win = splashWindow()   #pauseWindow()    #gameOverWindow()     #dialogWindow(1,"Game Over","Congratulations!!You have won this round. Click Ok to proceed...")        #scoreWindow()       #menuWindow()   #gameWindow(4)
     #win.show()
     sys.exit(app.exec_())
+"""

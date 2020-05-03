@@ -17,7 +17,7 @@ class database():
             self.c = self.conn.cursor()
             levels = ['beginner','easy','medium','hard']
             for lvl in levels:
-                self.c.execute("CREATE TABLE {}(sl_no INTEGER PRIMARY KEY,played DATETIME,hints INTEGER,moves INTEGER,time TIME,score REAL);".format(lvl))
+                self.c.execute("CREATE TABLE {}(sl_no INTEGER PRIMARY KEY,played DATETIME,hints INTEGER,moves INTEGER,time TIME,score INTEGER);".format(lvl))
                 self.c.execute("INSERT INTO {}(score) VALUES(0.0)".format(lvl))
                 self.c.execute("INSERT INTO {}(score) VALUES(0.0)".format(lvl))
                 self.c.execute("INSERT INTO {}(score) VALUES(0.0)".format(lvl))
@@ -43,7 +43,7 @@ class database():
         self.conn.commit()
 
     def show_table(self,t_name):
-        self.c.execute("SELECT score,hints,moves,time,played FROM {} ORDER BY score DESC;".format(t_name))
+        self.c.execute("SELECT score,moves,hints,time,played FROM {} ORDER BY score DESC;".format(t_name))
         res = self.c.fetchall()
         print("\n\n")
         for i in res:
@@ -55,14 +55,14 @@ class database():
         res = self.c.fetchall()
         return res
     
-a = database()
-"""a.addition_deletion('beginner','2015-11-05 14:29:36',5,2,'14:29:36',54)
-a.addition_deletion('beginner','2015-11-05 14:29:36',1,4,'14:29:36',64)
-a.addition_deletion('beginner','2015-11-05 14:29:36',9,7,'14:29:36',60)
-a.show_table('beginner')"""
-a.update_table('beginner','2015-11-05 14:29:36',5,3,'14:29:36',54)
-a.update_table('beginner','2015-11-05 14:29:36',5,2,'14:29:36',64)
-a.update_table('beginner','2015-11-05 14:29:36',5,2,'14:29:36',60)
-a.show_table('beginner')
-a.c.close()
-a.conn.close()
+#a = database()
+#"""a.addition_deletion('beginner','2015-11-05 14:29:36',5,2,'14:29:36',54)
+#a.addition_deletion('beginner','2015-11-05 14:29:36',1,4,'14:29:36',64)
+#a.addition_deletion('beginner','2015-11-05 14:29:36',9,7,'14:29:36',60)
+#a.show_table('beginner')"""
+#a.update_table('beginner','2015-11-05 14:29:36',5,3,'14:29:36',54)
+#a.update_table('beginner','2015-11-05 14:29:36',5,2,'14:29:36',64)
+#a.update_table('beginner','2015-11-05 14:29:36',5,2,'14:29:36',60)
+#a.show_table('beginner')
+#a.c.close()
+#a.conn.close()

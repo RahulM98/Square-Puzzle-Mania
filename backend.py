@@ -346,7 +346,7 @@ class Game():
             h = self.pc_screen_height // 1.6
             self.curr_imgShown_no -= 1
             self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
-            self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
+            self.settings_win.img_no_lbl.setText('{}/24'.format(self.curr_imgShown_no))
             if self.curr_imgShown_no == 1:
                 self.settings_win.left_img_btn.setDisabled(True)
             else:
@@ -363,8 +363,8 @@ class Game():
             h = self.pc_screen_height // 1.6
             self.curr_imgShown_no += 1
             self.settings_win.img_lbl.setPixmap(QtGui.QPixmap('squared/{}.jpg'.format(self.curr_imgShown_no)).scaled(h,h,QtCore.Qt.KeepAspectRatio))
-            self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_imgShown_no))
-            if self.curr_imgShown_no == 22:
+            self.settings_win.img_no_lbl.setText('{}/24'.format(self.curr_imgShown_no))
+            if self.curr_imgShown_no == 24:
                 self.settings_win.right_img_btn.setDisabled(True)
             else:
                 self.settings_win.right_img_btn.setEnabled(True)
@@ -435,13 +435,13 @@ class Game():
         self.settings_win.right_img_btn.clicked.connect(right_img_func)
         self.settings_win.select_img_btn.clicked.connect(select_img_func)
 
-        self.settings_win.img_no_lbl.setText('{}/22'.format(self.curr_img_no))
+        self.settings_win.img_no_lbl.setText('{}/24'.format(self.curr_img_no))
         self.settings_win.select_img_btn.setText("Selected")
         self.settings_win.select_img_btn.setChecked(True)
 
         if self.curr_img_no == 1:
             self.settings_win.left_img_btn.setDisabled(True)
-        elif self.curr_img_no == 22:
+        elif self.curr_img_no == 24:
             self.settings_win.right_img_btn.setDisabled(True)
 
         #Part2

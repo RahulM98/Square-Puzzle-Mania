@@ -81,6 +81,7 @@ class Game():
         self.init_menuWindow()
 
         self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.timer_handler)
 
     def init_menuWindow(self):
         def new_game_btn_func():
@@ -189,10 +190,6 @@ class Game():
             self.pause_win.sound_on_check.setChecked(False)
         
     def init_gameWindow(self):
-        def timer_handler():
-            self.time_count += 1
-            self.game_win.time_val_lbl.setText(self.get_time_with_format())
-
         def pause_btn_func():
             self.timer.stop()
             self.init_pauseWindow()
@@ -259,7 +256,7 @@ class Game():
         self.game_win.msg_lbl.setWordWrap(True)
 
         #time counter
-        self.timer.timeout.connect(timer_handler)
+        #self.timer.timeout.connect(timer_handler)
         self.timer.start(1000)
 
         #sound
@@ -498,6 +495,10 @@ class Game():
             self.menu_snd.setVolume(0)
             self.bg_snd.setVolume(0)
 
+    def timer_handler(self):
+        self.time_count += 1
+        self.game_win.time_val_lbl.setText(self.get_time_with_format())
+
     def get_time_with_format(self):
         s = self.time_count
         m,s = divmod(s,60)
@@ -648,7 +649,7 @@ class Game():
         #initial = [[1,2,4,8],[9,5,7,3],[6,14,10,12],[13,0,11,15]]
         node = Node(initial,n,g_score=0)
 
-        t = self.time_count
+        #t = self.time_count
 
         open_list.append(node)
         while len(open_list) > 0:
@@ -731,7 +732,7 @@ class Game():
     def calculate_score(self):
         completion_score = {'beginner':220,'easy':320,'medium':520,'hard':600}
         if self.curr_level != 'hard':
-            x = completion_score[self.curr_level] - self.move_count*2 - self.hint_count*5
+            x = completion_score[self.curr_level] - self.move_count*3 - self.hint_count*6 - self.time_count*2
         else:
             x = completion_score[self.curr_level] + self.move_count*2
         return x

@@ -1,8 +1,8 @@
 ## Title: UI.py
-## Name : 
+## Name : UI
 ## @author : Rahul Manna
 ## Created on : 2020-04-07 17:58:12
-## Description : 
+## Description : Contains UI for several windows
 
 from PyQt5 import QtWidgets,QtGui,QtCore
 from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QLabel,QGridLayout,QHBoxLayout,QVBoxLayout,QFrame,QCheckBox,QScrollArea,QGraphicsDropShadowEffect

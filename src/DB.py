@@ -1,8 +1,8 @@
 ## Title: DB.py
-## Name : 
+## Name : Database
 ## @author : Rahul Manna
 ## Created on : 2020-04-26 16:53:10
-## Description : 
+## Description : Handles all tasks related to database
 
 import sqlite3 as lite
 

@@ -1,14 +1,14 @@
-## Title: driver.py
-## Name : 
+## Title: drive.py
+## Name : Drive
 ## @author : Rahul Manna
 ## Created on : 2020-05-02 22:48:35
-## Description : 
+## Description : N/A
 
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
 from UI import splashWindow
-from backend import Game
+from sqr_puzzle_game import Game
 
 class driver():
     def __init__(self):

@@ -1,8 +1,8 @@
 ## Title: UI_Settings.py
-## Name : 
+## Name : Settings UI
 ## @author : Rahul Manna
 ## Created on : 2020-04-23 17:34:47
-## Description : 
+## Description : Contains UI for settings window
 
 import sys
 import PyQt5
@@ -14,9 +14,7 @@ class settingsWindow(QWidget):
         super().__init__()
         self.height = QApplication.desktop().screenGeometry().height()
         self.width = QApplication.desktop().screenGeometry().width()
-        #print("height",height,"width",width)
         self.setFixedSize(self.width,self.height)
-        #self.setWindowTitle("Puzzle game")
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
 
         self.initUI()

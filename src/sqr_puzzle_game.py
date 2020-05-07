@@ -1,8 +1,8 @@
-## Title: backend.py
-## Name : 
+## Title: sqr_puzzle_game.py
+## Name : Backend
 ## @author : Rahul Manna
 ## Created on : 2020-04-15 17:07:08
-## Description : 
+## Description : It controls running of the game
 
 import sys
 from PyQt5 import QtWidgets,QtCore,QtGui
@@ -15,6 +15,7 @@ from DB import database
 import random
 from datetime import datetime
 
+#Node class stores all informations about every states of the puzzle
 class Node():
     def __init__(self,data,n,g_score):  #Zero pos is a list having co ordinates of zero
         self.data = data
@@ -39,6 +40,7 @@ class Node():
             copy_arr.append(temp)
         return copy_arr
 
+    #Generate all possible children for a node
     def generate_children(self,g):
         # available moves for zero
         #                           Left                            Right                           Up                            Down
@@ -55,6 +57,7 @@ class Node():
 
         return children
 
+#Game class controls working of the game
 class Game():
     def __init__(self):
         self.pc_screen_height = QApplication.desktop().screenGeometry().height()
@@ -68,7 +71,7 @@ class Game():
         self.sound_on = True
         self.curr_volume = 0.5
 
-        self.db = database()
+        self.db = database()   # Initialise database
 
         self.bg_snd = QSoundEffect()
         self.bg_snd.setSource(QtCore.QUrl.fromLocalFile('audio/join.wav'))
@@ -80,7 +83,7 @@ class Game():
 
         self.init_menuWindow()
 
-        self.timer = QtCore.QTimer()
+        self.timer = QtCore.QTimer()    # Iintialize timer
         self.timer.timeout.connect(self.timer_handler)
 
     def init_menuWindow(self):
@@ -153,7 +156,7 @@ class Game():
             self.dialog_win.yes_btn.clicked.connect(dia_y_btn_func_2)
             self.dialog_win.no_btn.clicked.connect(dia_n_btn_func)
 
-        def dia_y_btn_func_1():
+        def dia_y_btn_func_1():     # yes button (1)
             self.bg_snd.stop()
             if self.sound_on == True:
                 self.menu_snd.setVolume(self.curr_volume)
@@ -165,7 +168,7 @@ class Game():
             self.pause_win.close()
             self.game_win.close()
 
-        def dia_y_btn_func_2():
+        def dia_y_btn_func_2():     # yes button (2)
             self.bg_snd.stop()
             if self.sound_on == True:
                 self.menu_snd.setVolume(self.curr_volume)
@@ -176,7 +179,7 @@ class Game():
             self.pause_win.close()
             self.game_win.close()
 
-        def dia_n_btn_func():
+        def dia_n_btn_func():   #No button
             self.dialog_win.close()
 
         self.pause_win = pauseWindow()
@@ -222,6 +225,7 @@ class Game():
             self.dialog_win.no_btn.clicked.connect(dia_n_btn_func)
             self.timer.stop()
 
+        # Initialize all
         self.move_count = 0
         self.time_count = 0
         self.hint_count = 0
@@ -256,7 +260,6 @@ class Game():
         self.game_win.msg_lbl.setWordWrap(True)
 
         #time counter
-        #self.timer.timeout.connect(timer_handler)
         self.timer.start(1000)
 
         #sound
@@ -465,11 +468,11 @@ class Game():
         self.score_win.back_btn.clicked.connect(back_btn_func)
 
         c = 0
-        for level in self.levels:
+        for level in self.levels:   # run for all tables
             c+=5
-            query_result = self.db.show_table(level)
-            for query in query_result:
-                for data in query:
+            query_result = self.db.show_table(level)  # query all details about a single table i.e. label [It is a list of tuples]
+            for query in query_result:  # single row of of table [It is a tuple]
+                for data in query:  # column values in each row
                     if query[1] == None:
                         self.score_win.table_value_lbl[c].setText("--")
                     else:
@@ -484,7 +487,6 @@ class Game():
     def init_dialogWindow(self,dialog_type,title,message):
         self.dialog_win = dialogWindow(dialog_type,title,message)
 
-
     def checkBox_state_change(self,state):
         if state == QtCore.Qt.Checked:
             self.sound_on = True
@@ -495,10 +497,12 @@ class Game():
             self.menu_snd.setVolume(0)
             self.bg_snd.setVolume(0)
 
+    # Function to handle the timer
     def timer_handler(self):
         self.time_count += 1
         self.game_win.time_val_lbl.setText(self.get_time_with_format())
 
+    # Return the time count in appropriate format [HH:MM:SS]
     def get_time_with_format(self):
         s = self.time_count
         m,s = divmod(s,60)
@@ -511,6 +515,7 @@ class Game():
             h = '0'+str(h)
         return '{}:{}:{}'.format(h,m,s)
 
+    # A Button inside the main game-grid is pressed
     def btn_pressed(self,i,j):
         def dia_ok_btn_func():
             self.init_gameOverWindow()
@@ -537,27 +542,30 @@ class Game():
             self.move_count += 1
         else:      #invalid move
             pass
-
+        
+        # setting text for no of move label in the game window
         if self.curr_level == 'hard':
             self.game_win.move_count_lbl.setText(str(self.move_count))
         else:
             self.game_win.move_count_lbl.setText(str(15 - self.move_count))
         
+        # Get positions of all numbers of the game board in a 2d list
         position = fill_position_dict(n,self.board)
         self.blank_i,self.blank_j = position[0]
-        if manhattan_dist(n,position) == 0:
+        if manhattan_dist(n,position) == 0: # Manhattan dist = 0 means the particular state is in the goal state
             #print("game over, winner decided!")
             #Dialog
             self.dialog_win = dialogWindow(1,"Game Over","Congratulations!!You have won this round. Click Ok to proceed...")
             self.dialog_win.ok_btn.clicked.connect(dia_ok_btn_func)
-            self.calculateScore_updateDB()
+            self.calculateScore_updateDB()      #Update the database with the score
             
-        elif self.move_count == 15 and self.curr_level != 'hard':
+        elif self.move_count == 15 and self.curr_level != 'hard': #Out of moves
             #print("Out of moves")
             self.timer.stop()
             self.dialog_win = dialogWindow(1,"Game Over","You are out of moves!! You have lost this round...")
             self.dialog_win.ok_btn.clicked.connect(dia_ok_btn_func)
 
+    #Checks if the current game score is greater than previously stored scores and updates the database
     def calculateScore_updateDB(self):
         self.timer.stop()
         self.score = self.calculate_score()
@@ -574,6 +582,7 @@ class Game():
                 self.db.update_table(self.curr_level,t,self.move_count,self.hint_count,total_time,self.score)
                 break
 
+    # Moves a tile from (x1,y1) to (x2,y2)
     def shuffle_tiles(self,x1,y1,x2,y2):
         def animation():
             temp = self.game_win.tiles[x1][y1].icon()
@@ -584,7 +593,6 @@ class Game():
             self.anim2.setStartValue(b)
             self.anim2.setEndValue(a)
             self.anim2.start()
-            
             
         # animation part 1
         self.anim1 = QPropertyAnimation(self.game_win.tiles[x2][y2], b"geometry")
@@ -597,6 +605,7 @@ class Game():
         self.anim1.start()
         self.anim1.finished.connect(animation)
 
+    # Move the zero to any positions by picking a destination randomly from the available moves and repeat the whole process about no_of_repeat
     def rearrange_all_tiles(self,no_of_repeat):
         n = self.levels[self.curr_level]
         available_moves = [[self.blank_i,self.blank_j-1],[self.blank_i-1,self.blank_j],[self.blank_i,self.blank_j+1],[self.blank_i+1,self.blank_j]]
@@ -633,23 +642,24 @@ class Game():
                     self.game_win.tiles[i][j].setIcon(QtGui.QIcon())
                 self.game_win.tiles[i][j].setIconSize(QtCore.QSize(btn_w-5,btn_h-5))
 
+    # This function can solve the puzzle when it gets invoked by HINT button in game window
     def auto_solve_puzzle(self):
         n = self.levels[self.curr_level]
         open_list = []
         closed_list = []
 
         initial = self.board
-        #initial = [[2,4,3],[1,0,6],[7,5,8]]
-        #initial = [[1,2,4],[5,8,7],[6,0,3]]
-        #initial = [[2,6,4],[1,0,3],[7,5,8]]
-        #initial = [[8,7,6],[5,4,3],[2,1,0]]
-        #initial = [[3,0,2],[6,5,1],[4,7,8]]
-        #initial = [[8,7,4],[3,2,0],[6,5,1]]
-        #initial = [[8,7,6],[5,4,3],[0,2,1]]
-        #initial = [[1,2,4,8],[9,5,7,3],[6,14,10,12],[13,0,11,15]]
+        #initial = [[2,4,3],[1,0,6],[7,5,8]]        # Testing
+        #initial = [[1,2,4],[5,8,7],[6,0,3]]        # Testing
+        #initial = [[2,6,4],[1,0,3],[7,5,8]]        # Testing
+        #initial = [[8,7,6],[5,4,3],[2,1,0]]        # Testing
+        #initial = [[3,0,2],[6,5,1],[4,7,8]]        # Testing
+        #initial = [[8,7,4],[3,2,0],[6,5,1]]        # Testing
+        #initial = [[8,7,6],[5,4,3],[0,2,1]]        # Testing
+        #initial = [[1,2,4,8],[9,5,7,3],[6,14,10,12],[13,0,11,15]]      # Testing
+        
+        # Set the current node as initial node
         node = Node(initial,n,g_score=0)
-
-        #t = self.time_count
 
         open_list.append(node)
         while len(open_list) > 0:
@@ -664,10 +674,10 @@ class Game():
                 break
             curr_node = open_list.pop(0)
 
-            if curr_node.h_score == 0:
+            if curr_node.h_score == 0:  # It has solved the puzzle
                 #print("solved")            
-                self.generate_solution(curr_node)
-                break
+                self.generate_solution(curr_node)       # Asks for the most promising state after current state for the achieved solution
+                break       #Stop searching more
 
             new_children = curr_node.generate_children(curr_node.g_score+1)
 
@@ -689,6 +699,7 @@ class Game():
             open_list.sort(key= lambda node:node.f_score)
             closed_list.append(curr_node)
 
+    # Returns the most promising state after current state for the achieved solution
     def generate_solution(self,curr_node):
         def dia_ok_btn_func():
             self.init_gameOverWindow()
@@ -729,6 +740,7 @@ class Game():
         #blank tile in board
         self.board[self.blank_i][self.blank_j] = 0
 
+    #Score calculation
     def calculate_score(self):
         completion_score = {'beginner':220,'easy':320,'medium':520,'hard':600}
         if self.curr_level != 'hard':
@@ -737,7 +749,8 @@ class Game():
             x = completion_score[self.curr_level] + self.move_count*2
         return x
 
-# move tile[x1][y1] to tile[x2][y2], so zero is in tile[x1][y1] now
+#In the parallel matrix of numbers
+# move tile[x1][y1] to tile[x2][y2], so zero is in tile[x1][y1] at begining of the function
 def shuffle_nos(x1,y1,x2,y2,arr,n):
     if x2 >= 0 and x2 < n and y2 >= 0 and y2 < n:
         arr[x1][y1] = arr[x2][y2]
